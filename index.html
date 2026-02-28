@@ -1,9 +1,967 @@
-<html>
+<!doctype html>
+<html lang="ja">
 <head>
-    <title>バスケットボールウォッチログ</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Basketball Watch Log</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#131a33; --muted:#9aa6c3; --text:#eef2ff;
+      --accent:#7c5cff; --danger:#ff4d6d; --ok:#38bdf8; --line:#263055;
+      --input:#0f1731;
+      --radius:16px;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --w: 980px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(56,189,248,.25), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit}
+    .wrap{max-width:var(--w); margin:0 auto; padding:16px}
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,16,32,.75);
+      border-bottom: 1px solid rgba(38,48,85,.55);
+    }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding:12px 16px; max-width:var(--w); margin:0 auto;
+    }
+    .brand{display:flex; flex-direction:column; gap:2px}
+    .brand h1{font-size:16px; margin:0; letter-spacing:.4px}
+    .brand small{color:var(--muted)}
+    .actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+    .btn{
+      border:1px solid rgba(38,48,85,.8);
+      background: rgba(19,26,51,.7);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow: 0 10px 24px rgba(0,0,0,.25);
+      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      display:inline-flex; align-items:center; gap:8px;
+      user-select:none;
+    }
+    .btn:hover{background: rgba(19,26,51,.95); border-color: rgba(124,92,255,.6)}
+    .btn:active{transform: translateY(1px)}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(124,92,255,.95), rgba(56,189,248,.75));
+      border-color: transparent;
+    }
+    .btn.danger{border-color: rgba(255,77,109,.6)}
+    .btn.ghost{background: transparent; box-shadow:none}
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(38,48,85,.8);
+      background: rgba(19,26,51,.5);
+      color: var(--muted); font-size:12px;
+    }
+    .grid{display:grid; gap:12px}
+    .card{
+      background: rgba(19,26,51,.7);
+      border:1px solid rgba(38,48,85,.85);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 14px 10px;
+      border-bottom:1px solid rgba(38,48,85,.7);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    }
+    .card .hd .title{display:flex; flex-direction:column; gap:4px}
+    .card .hd h2{margin:0; font-size:15px}
+    .card .hd .meta{color:var(--muted); font-size:12px}
+    .card .bd{padding:14px}
+    .empty{
+      padding:18px; color: var(--muted);
+      border: 1px dashed rgba(38,48,85,.9);
+      border-radius: var(--radius);
+      background: rgba(19,26,51,.35);
+    }
+
+    .list{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    @media(min-width: 780px){
+      .list{grid-template-columns: 1fr 1fr;}
+    }
+
+    .row{display:grid; gap:10px}
+    @media(min-width: 680px){
+      .row.cols2{grid-template-columns: 1fr 1fr}
+      .row.cols3{grid-template-columns: 1fr 1fr 1fr}
+    }
+    label{display:flex; flex-direction:column; gap:6px; font-size:12px; color: var(--muted)}
+    input, select, textarea{
+      width:100%;
+      background: rgba(15,23,49,.9);
+      color: var(--text);
+      border:1px solid rgba(38,48,85,.9);
+      border-radius: 12px;
+      padding:12px 12px;
+      outline:none;
+      font-size:14px;
+    }
+    textarea{min-height: 96px; resize: vertical}
+    input:focus, select:focus, textarea:focus{border-color: rgba(124,92,255,.85); box-shadow: 0 0 0 3px rgba(124,92,255,.18)}
+    .sectionTitle{
+      margin: 18px 0 10px;
+      font-size: 13px;
+      color: var(--text);
+      letter-spacing: .2px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .sectionTitle:before{
+      content:"";
+      width:10px; height:10px; border-radius: 3px;
+      background: rgba(124,92,255,.9);
+      box-shadow: 0 0 0 3px rgba(124,92,255,.18);
+      flex: 0 0 auto;
+    }
+    .hr{height:1px; background: rgba(38,48,85,.7); margin:14px 0}
+    .kvs{display:grid; gap:10px}
+    .kv{
+      border:1px solid rgba(38,48,85,.7);
+      border-radius: 14px;
+      padding:12px;
+      background: rgba(15,23,49,.55);
+    }
+    .kv .k{color:var(--muted); font-size:12px}
+    .kv .v{margin-top:6px; font-size:14px; white-space:pre-wrap}
+    .table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid rgba(38,48,85,.8);
+      background: rgba(15,23,49,.45);
+    }
+    .table th, .table td{
+      padding:10px;
+      border-bottom:1px solid rgba(38,48,85,.6);
+      font-size:13px;
+      text-align:left;
+      vertical-align:top;
+    }
+    .table th{color:var(--muted); font-weight:700}
+    .table tr:last-child td{border-bottom:none}
+    .table input{padding:10px; border-radius:12px}
+    .small{font-size:12px; color: var(--muted)}
+    .right{display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap}
+    .hide{display:none !important}
+    footer{padding:18px 0 26px; color: var(--muted); font-size:12px}
+
+    .search{
+      display:flex; gap:8px; align-items:center;
+      margin-top: 10px;
+    }
+    .search input{flex:1}
+    .tag{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted)}
+    .dot{width:8px; height:8px; border-radius:999px; background: rgba(56,189,248,.9); box-shadow: 0 0 0 3px rgba(56,189,248,.14)}
+    .dot.win{background: rgba(56,189,248,.9)}
+    .dot.lose{background: rgba(255,77,109,.9); box-shadow: 0 0 0 3px rgba(255,77,109,.14)}
+    .dot.draw{background: rgba(250,204,21,.9); box-shadow: 0 0 0 3px rgba(250,204,21,.14)}
+  </style>
 </head>
 <body>
-    <h1>ようこそ バスケットボールウォッチログへ</h1>
-    <p>ここに内容を書く</p>
+<header>
+  <div class="topbar">
+    <div class="brand">
+      <h1>🏀 Basketball Watch Log</h1>
+      <small>観戦記録（ローカル保存）</small>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="btnNew">＋ 新規記録</button>
+      <button class="btn" id="btnExport">⬇︎ エクスポート</button>
+      <button class="btn" id="btnImport">⬆︎ インポート</button>
+      <button class="btn ghost" id="btnReset">初期化</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- LIST -->
+  <section id="viewList">
+    <div class="card">
+      <div class="hd">
+        <div class="title">
+          <h2>記録一覧</h2>
+          <div class="meta">タップで詳細 / 編集</div>
+        </div>
+        <span class="pill" id="countPill">0件</span>
+      </div>
+      <div class="bd">
+        <div class="search">
+          <input id="q" type="search" placeholder="検索：リーグ / チーム / 会場 / メモ など" />
+          <button class="btn" id="btnClearQ">クリア</button>
+        </div>
+        <div class="hr"></div>
+        <div id="list" class="list"></div>
+        <div id="empty" class="empty hide">
+          まだ記録がありません。右上の「＋ 新規記録」から追加してね。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DETAIL -->
+  <section id="viewDetail" class="hide">
+    <div class="card">
+      <div class="hd">
+        <div class="title">
+          <h2 id="detailTitle">詳細</h2>
+          <div class="meta" id="detailMeta"></div>
+        </div>
+        <div class="right">
+          <button class="btn" id="btnBack">← 戻る</button>
+          <button class="btn" id="btnEdit">編集</button>
+          <button class="btn danger" id="btnDelete">削除</button>
+        </div>
+      </div>
+      <div class="bd" id="detailBody"></div>
+    </div>
+  </section>
+
+  <!-- FORM -->
+  <section id="viewForm" class="hide">
+    <div class="card">
+      <div class="hd">
+        <div class="title">
+          <h2 id="formTitle">新規記録</h2>
+          <div class="meta">1〜2画面MVP：追加 / 一覧 / 詳細（ローカル保存）</div>
+        </div>
+        <div class="right">
+          <button class="btn" id="btnCancel">キャンセル</button>
+          <button class="btn primary" id="btnSave">保存</button>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="sectionTitle">基本情報</div>
+        <div class="row cols2">
+          <label>試合日・時間
+            <input id="f_dateTime" type="datetime-local" />
+          </label>
+          <label>大会名・リーグ
+            <input id="f_league" type="text" placeholder="例：B.LEAGUE / NBA / Wリーグ など" />
+          </label>
+        </div>
+        <div class="row cols2">
+          <label>ホームチーム
+            <input id="f_homeTeam" type="text" placeholder="例：千葉ジェッツ" />
+          </label>
+          <label>アウェイチーム
+            <input id="f_awayTeam" type="text" placeholder="例：琉球ゴールデンキングス" />
+          </label>
+        </div>
+        <div class="row cols2">
+          <label>会場名
+            <input id="f_venue" type="text" placeholder="例：LaLa arena TOKYO-BAY" />
+          </label>
+          <label>座席
+            <input id="f_seat" type="text" placeholder="例：2階 S席 12列 8番" />
+          </label>
+        </div>
+
+        <div class="hr"></div>
+        <div class="sectionTitle">試合結果</div>
+        <div class="row cols3">
+          <label>最終スコア（ホーム）
+            <input id="f_finalHome" type="number" inputmode="numeric" min="0" placeholder="例：82" />
+          </label>
+          <label>最終スコア（アウェイ）
+            <input id="f_finalAway" type="number" inputmode="numeric" min="0" placeholder="例：78" />
+          </label>
+          <label>勝敗（自動）
+            <input id="f_result" type="text" readonly placeholder="スコア入力で自動" />
+          </label>
+        </div>
+
+        <div class="small">クォーター別得点（空欄OK）</div>
+        <table class="table" id="quartersTable">
+          <thead>
+            <tr>
+              <th style="width:90px">Q</th>
+              <th>ホーム</th>
+              <th>アウェイ</th>
+              <th style="width:120px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="quartersBody"></tbody>
+        </table>
+        <div style="margin-top:10px" class="right">
+          <button class="btn" id="btnAddOT">＋ 延長(OT)追加</button>
+        </div>
+
+        <div class="hr"></div>
+        <div class="sectionTitle">注目選手のスタッツ</div>
+        <div class="small">最低限は「名前だけ」でもOK（PTS/REB/ASTは空欄OK）</div>
+        <table class="table" id="playersTable" style="margin-top:10px">
+          <thead>
+            <tr>
+              <th>選手名</th>
+              <th style="width:120px">チーム</th>
+              <th style="width:90px">PTS</th>
+              <th style="width:90px">REB</th>
+              <th style="width:90px">AST</th>
+              <th>メモ</th>
+              <th style="width:120px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="playersBody"></tbody>
+        </table>
+        <div style="margin-top:10px" class="right">
+          <button class="btn" id="btnAddPlayer">＋ 選手追加</button>
+        </div>
+
+        <div class="hr"></div>
+        <div class="sectionTitle">試合内容のメモ</div>
+        <div class="row">
+          <label>試合の展開（逆転、接戦など）
+            <textarea id="f_flow" placeholder="例：前半ビハインドから3Qで逆転、終盤は1点差の攻防…"></textarea>
+          </label>
+          <label>印象に残ったプレー
+            <textarea id="f_play" placeholder="例：残り10秒のクラッチスリー、ブロックからの速攻…"></textarea>
+          </label>
+          <label>自分の選ぶMVP
+            <input id="f_mvp" type="text" placeholder="例：#12 〇〇（理由も書くなら上のメモへ）" />
+          </label>
+        </div>
+
+        <div class="hr"></div>
+        <div class="sectionTitle">会場の雰囲気・体験</div>
+        <div class="row">
+          <label>アリーナグルメ
+            <textarea id="f_food" placeholder="例：唐揚げ丼、クラフトビール…"></textarea>
+          </label>
+          <label>演出・イベント
+            <textarea id="f_event" placeholder="例：入場演出が派手、ハーフタイム企画…"></textarea>
+          </label>
+          <label>応援の様子
+            <textarea id="f_cheer" placeholder="例：コールが熱い、アウェイブースター多め…"></textarea>
+          </label>
+          <label>同行者・備考
+            <textarea id="f_note" placeholder="例：家族と、雨で移動大変、次は早めに入場…"></textarea>
+          </label>
+        </div>
+
+        <div class="hr"></div>
+        <div class="small">※ 保存先はブラウザ内（localStorage）です。端末やブラウザを変えると見えません。必要ならエクスポートを使ってね。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="wrap">
+    <div>Tips: まずは「日付・リーグ・チーム・スコア・会場」だけ入れて保存でもOK。後から編集できます。</div>
+  </footer>
+</main>
+
+<script>
+  // ===== Storage =====
+  const STORAGE_KEY = "bb_watchlog_v1";
+
+  function loadRecords() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const data = raw ? JSON.parse(raw) : [];
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  }
+  function saveRecords(records) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  }
+
+  function uid() {
+    if (crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "id_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+  }
+
+  function fmtDateTime(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    const pad = (n)=> String(n).padStart(2,"0");
+    return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function computeResult(finalHome, finalAway, homeTeam, awayTeam) {
+    const h = Number(finalHome);
+    const a = Number(finalAway);
+    if (!Number.isFinite(h) || !Number.isFinite(a)) return "";
+    if (h > a) return `ホーム勝ち（${homeTeam || "HOME"}）`;
+    if (h < a) return `アウェイ勝ち（${awayTeam || "AWAY"}）`;
+    return "引き分け";
+  }
+
+  // ===== UI refs =====
+  const viewList = document.getElementById("viewList");
+  const viewDetail = document.getElementById("viewDetail");
+  const viewForm = document.getElementById("viewForm");
+
+  const listEl = document.getElementById("list");
+  const emptyEl = document.getElementById("empty");
+  const countPill = document.getElementById("countPill");
+  const qEl = document.getElementById("q");
+
+  const detailTitle = document.getElementById("detailTitle");
+  const detailMeta = document.getElementById("detailMeta");
+  const detailBody = document.getElementById("detailBody");
+
+  const formTitle = document.getElementById("formTitle");
+
+  // form fields
+  const f_dateTime = document.getElementById("f_dateTime");
+  const f_league = document.getElementById("f_league");
+  const f_homeTeam = document.getElementById("f_homeTeam");
+  const f_awayTeam = document.getElementById("f_awayTeam");
+  const f_venue = document.getElementById("f_venue");
+  const f_seat = document.getElementById("f_seat");
+
+  const f_finalHome = document.getElementById("f_finalHome");
+  const f_finalAway = document.getElementById("f_finalAway");
+  const f_result = document.getElementById("f_result");
+
+  const f_flow = document.getElementById("f_flow");
+  const f_play = document.getElementById("f_play");
+  const f_mvp = document.getElementById("f_mvp");
+
+  const f_food = document.getElementById("f_food");
+  const f_event = document.getElementById("f_event");
+  const f_cheer = document.getElementById("f_cheer");
+  const f_note = document.getElementById("f_note");
+
+  // dynamic tables
+  const quartersBody = document.getElementById("quartersBody");
+  const playersBody = document.getElementById("playersBody");
+
+  // buttons
+  document.getElementById("btnNew").addEventListener("click", () => openFormForNew());
+  document.getElementById("btnBack").addEventListener("click", () => show("list"));
+  document.getElementById("btnCancel").addEventListener("click", () => show("list"));
+  document.getElementById("btnSave").addEventListener("click", () => onSave());
+  document.getElementById("btnEdit").addEventListener("click", () => openFormForEdit(currentId));
+  document.getElementById("btnDelete").addEventListener("click", () => onDelete(currentId));
+  document.getElementById("btnAddOT").addEventListener("click", () => addQuarterRow(nextOTLabel()));
+  document.getElementById("btnAddPlayer").addEventListener("click", () => addPlayerRow());
+  document.getElementById("btnExport").addEventListener("click", exportJSON);
+  document.getElementById("btnImport").addEventListener("click", importJSON);
+  document.getElementById("btnReset").addEventListener("click", resetAll);
+
+  document.getElementById("btnClearQ").addEventListener("click", () => {
+    qEl.value = "";
+    renderList();
+  });
+  qEl.addEventListener("input", renderList);
+
+  f_finalHome.addEventListener("input", () => {
+    f_result.value = computeResult(f_finalHome.value, f_finalAway.value, f_homeTeam.value, f_awayTeam.value);
+  });
+  f_finalAway.addEventListener("input", () => {
+    f_result.value = computeResult(f_finalHome.value, f_finalAway.value, f_homeTeam.value, f_awayTeam.value);
+  });
+  f_homeTeam.addEventListener("input", () => {
+    f_result.value = computeResult(f_finalHome.value, f_finalAway.value, f_homeTeam.value, f_awayTeam.value);
+  });
+  f_awayTeam.addEventListener("input", () => {
+    f_result.value = computeResult(f_finalHome.value, f_finalAway.value, f_homeTeam.value, f_awayTeam.value);
+  });
+
+  // ===== State =====
+  let records = loadRecords();
+  let currentId = null;
+
+  // ===== Routing-ish =====
+  function show(which){
+    viewList.classList.toggle("hide", which !== "list");
+    viewDetail.classList.toggle("hide", which !== "detail");
+    viewForm.classList.toggle("hide", which !== "form");
+    if (which === "list") renderList();
+  }
+
+  // ===== Quarters =====
+  function resetQuarters() {
+    quartersBody.innerHTML = "";
+    ["Q1","Q2","Q3","Q4"].forEach(q => addQuarterRow(q));
+  }
+  function nextOTLabel(){
+    const labels = [...quartersBody.querySelectorAll("tr")].map(tr => tr.dataset.label);
+    const otCount = labels.filter(x => x && x.startsWith("OT")).length;
+    return "OT" + (otCount + 1);
+  }
+  function addQuarterRow(label, homeVal = "", awayVal = "", removable = false){
+    const tr = document.createElement("tr");
+    tr.dataset.label = label;
+
+    tr.innerHTML = `
+      <td><strong>${label}</strong></td>
+      <td><input type="number" min="0" inputmode="numeric" placeholder="-" value="${homeVal ?? ""}"></td>
+      <td><input type="number" min="0" inputmode="numeric" placeholder="-" value="${awayVal ?? ""}"></td>
+      <td></td>
+    `;
+    const tdOps = tr.querySelector("td:last-child");
+
+    if (label.startsWith("OT")) removable = true;
+
+    if (removable){
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = "削除";
+      btn.addEventListener("click", () => tr.remove());
+      tdOps.appendChild(btn);
+    } else {
+      tdOps.innerHTML = `<span class="small">固定</span>`;
+    }
+    quartersBody.appendChild(tr);
+  }
+  function readQuarters(){
+    const rows = [...quartersBody.querySelectorAll("tr")];
+    return rows.map(tr => {
+      const [homeInput, awayInput] = tr.querySelectorAll("input");
+      const home = homeInput.value === "" ? null : Number(homeInput.value);
+      const away = awayInput.value === "" ? null : Number(awayInput.value);
+      return { label: tr.dataset.label, home, away };
+    });
+  }
+  function fillQuarters(qs){
+    quartersBody.innerHTML = "";
+    // ensure Q1-4 exist first
+    const base = ["Q1","Q2","Q3","Q4"];
+    const map = new Map((qs||[]).map(x => [x.label, x]));
+    base.forEach(label => {
+      const x = map.get(label) || {};
+      addQuarterRow(label, x.home ?? "", x.away ?? "", false);
+    });
+    // append OTs if any
+    (qs||[]).filter(x => x.label && x.label.startsWith("OT")).forEach(x => {
+      addQuarterRow(x.label, x.home ?? "", x.away ?? "", true);
+    });
+  }
+
+  // ===== Players =====
+  function resetPlayers(){
+    playersBody.innerHTML = "";
+    addPlayerRow();
+  }
+  function addPlayerRow(p = {}){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input type="text" placeholder="例：#2 〇〇" value="${esc(p.name)}"></td>
+      <td>
+        <select>
+          <option value="">-</option>
+          <option value="home">ホーム</option>
+          <option value="away">アウェイ</option>
+          <option value="other">その他</option>
+        </select>
+      </td>
+      <td><input type="number" min="0" inputmode="numeric" placeholder="-" value="${numOrEmpty(p.pts)}"></td>
+      <td><input type="number" min="0" inputmode="numeric" placeholder="-" value="${numOrEmpty(p.reb)}"></td>
+      <td><input type="number" min="0" inputmode="numeric" placeholder="-" value="${numOrEmpty(p.ast)}"></td>
+      <td><input type="text" placeholder="例：ディフェンスが良かった" value="${esc(p.note)}"></td>
+      <td></td>
+    `;
+    const sel = tr.querySelector("select");
+    sel.value = p.team || "";
+    const tdOps = tr.querySelector("td:last-child");
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = "削除";
+    btn.addEventListener("click", () => tr.remove());
+    tdOps.appendChild(btn);
+    playersBody.appendChild(tr);
+  }
+  function readPlayers(){
+    const rows = [...playersBody.querySelectorAll("tr")];
+    return rows.map(tr => {
+      const inputs = tr.querySelectorAll("input");
+      const sel = tr.querySelector("select");
+      const name = inputs[0].value.trim();
+      const team = sel.value;
+      const pts = inputs[1].value === "" ? null : Number(inputs[1].value);
+      const reb = inputs[2].value === "" ? null : Number(inputs[2].value);
+      const ast = inputs[3].value === "" ? null : Number(inputs[3].value);
+      const note = inputs[4].value.trim();
+      return { name, team, pts, reb, ast, note };
+    }).filter(p => p.name !== "" || p.note !== "" || p.pts != null || p.reb != null || p.ast != null);
+  }
+  function fillPlayers(ps){
+    playersBody.innerHTML = "";
+    (ps && ps.length ? ps : [{}]).forEach(p => addPlayerRow(p));
+  }
+
+  // ===== CRUD =====
+  function openFormForNew(){
+    currentId = null;
+    formTitle.textContent = "新規記録";
+    clearForm();
+    show("form");
+  }
+
+  function openFormForEdit(id){
+    const rec = records.find(r => r.id === id);
+    if (!rec) return;
+    currentId = id;
+    formTitle.textContent = "編集";
+    fillForm(rec);
+    show("form");
+  }
+
+  function clearForm(){
+    // defaults
+    f_dateTime.value = "";
+    f_league.value = "";
+    f_homeTeam.value = "";
+    f_awayTeam.value = "";
+    f_venue.value = "";
+    f_seat.value = "";
+    f_finalHome.value = "";
+    f_finalAway.value = "";
+    f_result.value = "";
+    f_flow.value = "";
+    f_play.value = "";
+    f_mvp.value = "";
+    f_food.value = "";
+    f_event.value = "";
+    f_cheer.value = "";
+    f_note.value = "";
+    resetQuarters();
+    resetPlayers();
+  }
+
+  function fillForm(rec){
+    f_dateTime.value = rec.dateTime || "";
+    f_league.value = rec.league || "";
+    f_homeTeam.value = rec.homeTeam || "";
+    f_awayTeam.value = rec.awayTeam || "";
+    f_venue.value = rec.venue || "";
+    f_seat.value = rec.seat || "";
+
+    f_finalHome.value = rec.finalHome ?? "";
+    f_finalAway.value = rec.finalAway ?? "";
+    f_result.value = rec.result || computeResult(rec.finalHome, rec.finalAway, rec.homeTeam, rec.awayTeam);
+
+    fillQuarters(rec.quarters || []);
+    fillPlayers(rec.players || []);
+
+    f_flow.value = rec.flow || "";
+    f_play.value = rec.play || "";
+    f_mvp.value = rec.mvp || "";
+
+    f_food.value = rec.food || "";
+    f_event.value = rec.event || "";
+    f_cheer.value = rec.cheer || "";
+    f_note.value = rec.note || "";
+  }
+
+  function onSave(){
+    const rec = readForm();
+    if (!rec.homeTeam && !rec.awayTeam && !rec.league && !rec.dateTime){
+      alert("最低でも「日付 or リーグ or チーム名」を入れるのがおすすめ！");
+    }
+
+    if (currentId){
+      const idx = records.findIndex(r => r.id === currentId);
+      if (idx >= 0){
+        rec.id = currentId;
+        rec.updatedAt = new Date().toISOString();
+        records[idx] = rec;
+      }
+    } else {
+      rec.id = uid();
+      rec.createdAt = new Date().toISOString();
+      rec.updatedAt = rec.createdAt;
+      records.unshift(rec);
+    }
+
+    // sort: dateTime desc if available, else updatedAt desc
+    records.sort((a,b) => (b.dateTime || b.updatedAt || "").localeCompare(a.dateTime || a.updatedAt || ""));
+
+    saveRecords(records);
+    currentId = rec.id;
+    openDetail(rec.id);
+  }
+
+  function readForm(){
+    const finalHome = f_finalHome.value === "" ? null : Number(f_finalHome.value);
+    const finalAway = f_finalAway.value === "" ? null : Number(f_finalAway.value);
+    const homeTeam = f_homeTeam.value.trim();
+    const awayTeam = f_awayTeam.value.trim();
+
+    const rec = {
+      id: null,
+      dateTime: f_dateTime.value,
+      league: f_league.value.trim(),
+      homeTeam,
+      awayTeam,
+      venue: f_venue.value.trim(),
+      seat: f_seat.value.trim(),
+
+      finalHome,
+      finalAway,
+      result: computeResult(finalHome, finalAway, homeTeam, awayTeam),
+      quarters: readQuarters(),
+      players: readPlayers(),
+
+      flow: f_flow.value.trim(),
+      play: f_play.value.trim(),
+      mvp: f_mvp.value.trim(),
+
+      food: f_food.value.trim(),
+      event: f_event.value.trim(),
+      cheer: f_cheer.value.trim(),
+      note: f_note.value.trim(),
+
+      createdAt: null,
+      updatedAt: null
+    };
+    return rec;
+  }
+
+  function onDelete(id){
+    const rec = records.find(r => r.id === id);
+    if (!rec) return;
+    if (!confirm("この記録を削除しますか？")) return;
+    records = records.filter(r => r.id !== id);
+    saveRecords(records);
+    currentId = null;
+    show("list");
+  }
+
+  // ===== Render list/detail =====
+  function renderList(){
+    const q = (qEl.value || "").trim().toLowerCase();
+    const filtered = records.filter(r => {
+      if (!q) return true;
+      const blob = [
+        r.league, r.homeTeam, r.awayTeam, r.venue, r.seat,
+        r.flow, r.play, r.mvp, r.food, r.event, r.cheer, r.note
+      ].join(" ").toLowerCase();
+      return blob.includes(q);
+    });
+
+    countPill.textContent = `${filtered.length}件`;
+    listEl.innerHTML = "";
+    emptyEl.classList.toggle("hide", filtered.length !== 0);
+
+    filtered.forEach(r => {
+      const matchup = `${r.homeTeam || "HOME"} vs ${r.awayTeam || "AWAY"}`;
+      const score = (r.finalHome != null && r.finalAway != null) ? `${r.finalHome} - ${r.finalAway}` : "—";
+      const dt = fmtDateTime(r.dateTime) || "日付未設定";
+      const venue = r.venue || "会場未設定";
+      const league = r.league || "リーグ未設定";
+
+      const dotClass = (r.finalHome == null || r.finalAway == null) ? "draw"
+        : (r.finalHome > r.finalAway ? "win" : (r.finalHome < r.finalAway ? "lose" : "draw"));
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.style.cursor = "pointer";
+      card.innerHTML = `
+        <div class="hd">
+          <div class="title">
+            <h2>${esc(matchup)}</h2>
+            <div class="meta">${esc(dt)} ・ ${esc(league)}</div>
+          </div>
+          <span class="pill"><span class="dot ${dotClass}"></span>${esc(score)}</span>
+        </div>
+        <div class="bd">
+          <div class="tag"><span class="dot" style="opacity:.35"></span><span>${esc(venue)}</span></div>
+          ${r.mvp ? `<div class="small" style="margin-top:8px">MVP: ${esc(r.mvp)}</div>` : `<div class="small" style="margin-top:8px">メモ: 未入力</div>`}
+        </div>
+      `;
+      card.addEventListener("click", () => openDetail(r.id));
+      listEl.appendChild(card);
+    });
+  }
+
+  function openDetail(id){
+    const rec = records.find(r => r.id === id);
+    if (!rec) return;
+    currentId = id;
+
+    const matchup = `${rec.homeTeam || "HOME"} vs ${rec.awayTeam || "AWAY"}`;
+    const score = (rec.finalHome != null && rec.finalAway != null) ? `${rec.finalHome} - ${rec.finalAway}` : "—";
+    detailTitle.textContent = matchup;
+    detailMeta.textContent = `${fmtDateTime(rec.dateTime) || "日付未設定"} ・ ${rec.league || "リーグ未設定"} ・ ${score}`;
+
+    detailBody.innerHTML = `
+      ${kvGrid("基本情報", [
+        ["会場", rec.venue || "—"],
+        ["座席", rec.seat || "—"],
+      ])}
+      ${kvGrid("試合結果", [
+        ["勝敗", rec.result || "—"],
+        ["最終スコア", score],
+      ])}
+      ${quartersView(rec)}
+      ${playersView(rec)}
+      ${kvGrid("試合内容のメモ", [
+        ["試合の展開", rec.flow || "—"],
+        ["印象に残ったプレー", rec.play || "—"],
+        ["自分の選ぶMVP", rec.mvp || "—"],
+      ])}
+      ${kvGrid("会場の雰囲気・体験", [
+        ["アリーナグルメ", rec.food || "—"],
+        ["演出・イベント", rec.event || "—"],
+        ["応援の様子", rec.cheer || "—"],
+        ["同行者・備考", rec.note || "—"],
+      ])}
+      <div class="hr"></div>
+      <div class="small">更新: ${fmtDateTime(rec.updatedAt) || "—"}</div>
+    `;
+
+    show("detail");
+  }
+
+  function kvGrid(title, items){
+    const cells = items.map(([k,v]) => `
+      <div class="kv">
+        <div class="k">${esc(k)}</div>
+        <div class="v">${esc(v)}</div>
+      </div>
+    `).join("");
+    return `
+      <div class="sectionTitle">${esc(title)}</div>
+      <div class="kvs">${cells}</div>
+      <div class="hr"></div>
+    `;
+  }
+
+  function quartersView(rec){
+    const qs = (rec.quarters || []).filter(x => x && x.label);
+    const any = qs.some(x => x.home != null || x.away != null);
+    if (!any) return "";
+    const rows = qs.map(x => `
+      <tr>
+        <td><strong>${esc(x.label)}</strong></td>
+        <td>${x.home == null ? "—" : esc(String(x.home))}</td>
+        <td>${x.away == null ? "—" : esc(String(x.away))}</td>
+      </tr>
+    `).join("");
+    return `
+      <div class="sectionTitle">クォーター別得点</div>
+      <table class="table">
+        <thead><tr><th style="width:90px">Q</th><th>ホーム</th><th>アウェイ</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="hr"></div>
+    `;
+  }
+
+  function playersView(rec){
+    const ps = (rec.players || []);
+    if (!ps.length) return "";
+    const rows = ps.map(p => `
+      <tr>
+        <td>${esc(p.name || "—")}</td>
+        <td>${esc(teamLabel(p.team))}</td>
+        <td>${p.pts == null ? "—" : esc(String(p.pts))}</td>
+        <td>${p.reb == null ? "—" : esc(String(p.reb))}</td>
+        <td>${p.ast == null ? "—" : esc(String(p.ast))}</td>
+        <td>${esc(p.note || "")}</td>
+      </tr>
+    `).join("");
+    return `
+      <div class="sectionTitle">注目選手のスタッツ</div>
+      <table class="table">
+        <thead><tr>
+          <th>選手名</th><th style="width:120px">チーム</th>
+          <th style="width:90px">PTS</th><th style="width:90px">REB</th><th style="width:90px">AST</th>
+          <th>メモ</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="hr"></div>
+    `;
+  }
+
+  function teamLabel(v){
+    if (v === "home") return "ホーム";
+    if (v === "away") return "アウェイ";
+    if (v === "other") return "その他";
+    return "—";
+  }
+
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+  function numOrEmpty(x){
+    return (x == null || Number.isNaN(Number(x))) ? "" : String(x);
+  }
+
+  // ===== Export/Import =====
+  function exportJSON(){
+    const data = JSON.stringify(records, null, 2);
+    const blob = new Blob([data], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `basketball-watchlog-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function importJSON(){
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.onchange = () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const arr = JSON.parse(reader.result);
+          if (!Array.isArray(arr)) throw new Error("not array");
+          // merge by id
+          const map = new Map(records.map(r => [r.id, r]));
+          arr.forEach(r => {
+            if (!r || typeof r !== "object") return;
+            if (!r.id) r.id = uid();
+            map.set(r.id, r);
+          });
+          records = [...map.values()];
+          records.sort((a,b) => (b.dateTime || b.updatedAt || "").localeCompare(a.dateTime || a.updatedAt || ""));
+          saveRecords(records);
+          show("list");
+          alert("インポートしました！");
+        } catch(e){
+          alert("読み込みに失敗しました（JSON形式を確認してね）");
+        }
+      };
+      reader.readAsText(file, "utf-8");
+    };
+    input.click();
+  }
+
+  function resetAll(){
+    if (!confirm("全データを削除して初期化します。よろしいですか？")) return;
+    records = [];
+    saveRecords(records);
+    show("list");
+  }
+
+  // ===== Init =====
+  renderList();
+  show("list");
+</script>
 </body>
 </html>
