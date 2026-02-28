@@ -1,69 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basketball Watchlog</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        .quarter {
-            display: none;
-            margin: 10px 0;
-        }
-        .quarter-header {
-            cursor: pointer;
-            background-color: #f2f2f2;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-    </style>
+    <title>バスケットボールウォッチログ</title>
 </head>
 <body>
-    <h1>Basketball Match Log</h1>
-    <form id="scoreForm">
-        <label for="team1">Team 1:</label>
-        <input type="text" id="team1" required>
-        <label for="team2">Team 2:</label>
-        <input type="text" id="team2" required>
-        <label for="finalScore">Final Score:</label>
-        <input type="number" id="finalScore" required>
-        <div class="quarter-header">Q1</div>
-        <div class="quarter">
-            <label for="q1Score1">Team 1 Score:</label>
-            <input type="number" id="q1Score1">
-            <label for="q1Score2">Team 2 Score:</label>
-            <input type="number" id="q1Score2">
-        </div>
-        <div class="quarter-header">Q2</div>
-        <div class="quarter">
-            <label for="q2Score1">Team 1 Score:</label>
-            <input type="number" id="q2Score1">
-            <label for="q2Score2">Team 2 Score:</label>
-            <input type="number" id="q2Score2">
-        </div>
-        <div class="quarter-header">Q3</div>
-        <div class="quarter">
-            <label for="q3Score1">Team 1 Score:</label>
-            <input type="number" id="q3Score1">
-            <label for="q3Score2">Team 2 Score:</label>
-            <input type="number" id="q3Score2">
-        </div>
-        <div class="quarter-header">Q4</div>
-        <div class="quarter">
-            <label for="q4Score1">Team 1 Score:</label>
-            <input type="number" id="q4Score1">
-            <label for="q4Score2">Team 2 Score:</label>
-            <input type="number" id="q4Score2">
-        </div>
-        <button type="submit">Submit</button>
-    </form>
-    <script>
-        $(document).ready(function() {
-            $('.quarter-header').click(function() {
-                $(this).next('.quarter').slideToggle();
-            });
-        });
-    </script>
+    <h1>ようこそ バスケットボールウォッチログへ</h1>
+    <p>ここに内容を書く</p>
 </body>
 </html>
