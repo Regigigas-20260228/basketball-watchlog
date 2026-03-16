@@ -504,9 +504,25 @@ function openQuickFormForNew() {
   renderSuggestions("sug_awayTeam", getUniqueTeams(records),   qf_awayTeam, qf_finalHome);
   renderSuggestions("sug_venue",    getUniqueVenues(records),  qf_venue,    qf_memo);
 
+  // 応援側: favoriteTeamName と照合して初期選択（空なら未選択）
+  setQfSupportedSide(detectSupportedSide("", ""));
+
   show("quickForm");
   // 最初のフォーカスはホームチーム（日付ではない）
   setTimeout(() => qf_homeTeam.focus(), 80);
+}
+
+/** クイックフォームの応援側ラジオを設定する */
+function setQfSupportedSide(value) {
+  document.querySelectorAll('input[name="qf_supportedSide"]').forEach(el => {
+    el.checked = (el.value === value);
+  });
+}
+
+/** クイックフォームの応援側ラジオ値を読む */
+function getQfSupportedSide() {
+  const checked = document.querySelector('input[name="qf_supportedSide"]:checked');
+  return checked ? checked.value : "";
 }
 
 function readQuickForm() {
@@ -515,28 +531,29 @@ function readQuickForm() {
   const homeTeam  = qf_homeTeam.value.trim();
   const awayTeam  = qf_awayTeam.value.trim();
   return {
-    id:          null,
-    dateTime:    qf_dateTime.value,
-    league:      qf_league.value.trim(),
+    id:            null,
+    dateTime:      qf_dateTime.value,
+    league:        qf_league.value.trim(),
     homeTeam,
     awayTeam,
-    venue:       qf_venue.value.trim(),
-    seat:        "",
+    venue:         qf_venue.value.trim(),
+    seat:          "",
     finalHome,
     finalAway,
-    result:      computeResult(finalHome, finalAway, homeTeam, awayTeam),
-    useQuarters: false,
-    quarters:    [],
-    players:     [],
-    flow:        "",
-    play:        "",
-    mvp:         "",
-    food:        "",
-    event:       "",
-    cheer:       "",
-    note:        qf_memo.value.trim(),
-    createdAt:   null,
-    updatedAt:   null,
+    result:        computeResult(finalHome, finalAway, homeTeam, awayTeam),
+    supportedSide: getQfSupportedSide(),
+    useQuarters:   false,
+    quarters:      [],
+    players:       [],
+    flow:          "",
+    play:          "",
+    mvp:           "",
+    food:          "",
+    event:         "",
+    cheer:         "",
+    note:          qf_memo.value.trim(),
+    createdAt:     null,
+    updatedAt:     null,
   };
 }
 
@@ -1232,32 +1249,32 @@ const THEMES = [
 
 /** @type {ThemeDefinition[]} */
 const TEAM_THEME_PRESETS = [
-  { id: "levanga-hokkaido",           name: "レバンガ北海道",                 shortName: "北海道",   category: "b-league", palette: { primary: "#8ec21f", secondary: "#000000" } },
-  { id: "sendai-89ers",               name: "仙台89ERS",                      shortName: "仙台",     category: "b-league", palette: { primary: "#eae713", secondary: "#000000" }, rules: { primaryIsLight: true } },
-  { id: "akita-northern-happinets",   name: "秋田ノーザンハピネッツ",         shortName: "秋田",     category: "b-league", palette: { primary: "#e30072", secondary: "#c38d21" } },
-  { id: "ibaraki-robots",             name: "茨城ロボッツ",                   shortName: "茨城",     category: "b-league", palette: { primary: "#023894", secondary: "#ee8a00" } },
-  { id: "utsunomiya-brex",            name: "宇都宮ブレックス",               shortName: "宇都宮",   category: "b-league", palette: { primary: "#ffd400", secondary: "#12315a" }, rules: { primaryIsLight: true } },
-  { id: "gunma-crane-thunders",       name: "群馬クレインサンダーズ",         shortName: "群馬",     category: "b-league", palette: { primary: "#000000", secondary: "#ffe102", tertiary: "#e60013" } },
-  { id: "koshigaya-alphas",           name: "越谷アルファーズ",               shortName: "越谷",     category: "b-league", palette: { primary: "#7e1b2f", secondary: "#c7b27d" } },
-  { id: "altiri-chiba",               name: "アルティーリ千葉",               shortName: "A千葉",    category: "b-league", palette: { primary: "#030b1c", secondary: "#ffffff" }, rules: { secondaryIsLight: true } },
-  { id: "chiba-jets",                 name: "千葉ジェッツ",                   shortName: "千葉J",    category: "b-league", palette: { primary: "#c8181d", secondary: "#dee1e1" }, rules: { secondaryIsLight: true } },
-  { id: "alvark-tokyo",               name: "アルバルク東京",                 shortName: "A東京",    category: "b-league", palette: { primary: "#e60021", secondary: "#000000" } },
-  { id: "sunrockers-shibuya",         name: "サンロッカーズ渋谷",             shortName: "渋谷",     category: "b-league", palette: { primary: "#fff100", secondary: "#743e94", tertiary: "#000000" }, rules: { primaryIsLight: true } },
-  { id: "kawasaki-brave-thunders",    name: "川崎ブレイブサンダース",         shortName: "川崎",     category: "b-league", palette: { primary: "#8f0038", secondary: "#b58f26" } },
-  { id: "yokohama-b-corsairs",        name: "横浜ビー・コルセアーズ",         shortName: "横浜BC",   category: "b-league", palette: { primary: "#00263A", secondary: "#A6192E", tertiary: "#83704C" } },
-  { id: "toyama-grouses",             name: "富山グラウジーズ",               shortName: "富山",     category: "b-league", palette: { primary: "#d60d1a", secondary: "#000000" } },
-  { id: "san-en-neophoenix",          name: "三遠ネオフェニックス",           shortName: "三遠",     category: "b-league", palette: { primary: "#e80013", secondary: "#fcd200", tertiary: "#000000" } },
-  { id: "seahorses-mikawa",           name: "シーホース三河",                 shortName: "三河",     category: "b-league", palette: { primary: "#00469c", secondary: "#030303", tertiary: "#b39240" } },
-  { id: "fighting-eagles-nagoya",     name: "ファイティングイーグルス名古屋", shortName: "FE名古屋", category: "b-league", palette: { primary: "#223f99", secondary: "#ed1f22" } },
-  { id: "nagoya-diamond-dolphins",    name: "名古屋ダイヤモンドドルフィンズ", shortName: "名古屋D",  category: "b-league", palette: { primary: "#ed1a21", secondary: "#b8a469", tertiary: "#000000" } },
-  { id: "shiga-lakes",                name: "滋賀レイクス",                   shortName: "滋賀",     category: "b-league", palette: { primary: "#015caa", secondary: "#000000", tertiary: "#fac000" } },
-  { id: "kyoto-hannaryz",             name: "京都ハンナリーズ",               shortName: "京都",     category: "b-league", palette: { primary: "#0085a6", secondary: "#f2f2f2" }, rules: { secondaryIsLight: true } },
-  { id: "osaka-evessa",               name: "大阪エヴェッサ",                 shortName: "大阪",     category: "b-league", palette: { primary: "#fc0301", secondary: "#c69933", tertiary: "#000000" } },
-  { id: "shimane-susanoo-magic",      name: "島根スサノオマジック",           shortName: "島根",     category: "b-league", palette: { primary: "#066fb9", secondary: "#a6a6a1" } },
-  { id: "hiroshima-dragonflies",      name: "広島ドラゴンフライズ",           shortName: "広島",     category: "b-league", palette: { primary: "#e84509", secondary: "#02adab" } },
-  { id: "saga-ballooners",            name: "佐賀バルーナーズ",               shortName: "佐賀",     category: "b-league", palette: { primary: "#00a5cf", secondary: "#ed40a8" } },
-  { id: "nagasaki-velca",             name: "長崎ヴェルカ",                   shortName: "長崎",     category: "b-league", palette: { primary: "#1d2d52", secondary: "#ffffff" }, rules: { secondaryIsLight: true } },
-  { id: "ryukyu-golden-kings",        name: "琉球ゴールデンキングス",         shortName: "琉球",     category: "b-league", palette: { primary: "#d6bb72", secondary: "#003d66", tertiary: "#c41a1f" }, rules: { primaryIsLight: true } },
+  { id: "lime-black",          name: "ライム×ブラック",                 shortName: "ライム",     category: "color-preset", palette: { primary: "#8ec21f", secondary: "#000000" } },
+  { id: "lemon-black",         name: "レモン×ブラック",                 shortName: "レモン",     category: "color-preset", palette: { primary: "#eae713", secondary: "#000000" }, rules: { primaryIsLight: true } },
+  { id: "magenta-gold",        name: "マゼンタ×ゴールド",               shortName: "マゼンタ",   category: "color-preset", palette: { primary: "#e30072", secondary: "#c38d21" } },
+  { id: "navy-orange",         name: "ネイビー×オレンジ",               shortName: "ネイビーO",  category: "color-preset", palette: { primary: "#023894", secondary: "#ee8a00" } },
+  { id: "gold-navy",           name: "ゴールド×ネイビー",               shortName: "ゴールド",   category: "color-preset", palette: { primary: "#ffd400", secondary: "#12315a" }, rules: { primaryIsLight: true } },
+  { id: "black-yellow-red",    name: "ブラック×イエロー×レッド",        shortName: "BYR",        category: "color-preset", palette: { primary: "#000000", secondary: "#ffe102", tertiary: "#e60013" } },
+  { id: "burgundy-tan",        name: "バーガンディ×タン",               shortName: "バーガンディ",category: "color-preset", palette: { primary: "#7e1b2f", secondary: "#c7b27d" } },
+  { id: "midnight-white",      name: "ミッドナイト×ホワイト",           shortName: "ミッドナイト",category: "color-preset", palette: { primary: "#030b1c", secondary: "#ffffff" }, rules: { secondaryIsLight: true } },
+  { id: "red-silver",          name: "レッド×シルバー",                 shortName: "レッドS",    category: "color-preset", palette: { primary: "#c8181d", secondary: "#dee1e1" }, rules: { secondaryIsLight: true } },
+  { id: "scarlet-black",       name: "スカーレット×ブラック",           shortName: "スカーレット",category: "color-preset", palette: { primary: "#e60021", secondary: "#000000" } },
+  { id: "yellow-purple",       name: "イエロー×パープル",               shortName: "YP",         category: "color-preset", palette: { primary: "#fff100", secondary: "#743e94", tertiary: "#000000" }, rules: { primaryIsLight: true } },
+  { id: "wine-gold",           name: "ワイン×ゴールド",                 shortName: "ワイン",     category: "color-preset", palette: { primary: "#8f0038", secondary: "#b58f26" } },
+  { id: "dark-navy-crimson",   name: "ダークネイビー×クリムゾン",       shortName: "DN×CR",      category: "color-preset", palette: { primary: "#00263A", secondary: "#A6192E", tertiary: "#83704C" } },
+  { id: "crimson-black",       name: "クリムゾン×ブラック",             shortName: "クリムゾン", category: "color-preset", palette: { primary: "#d60d1a", secondary: "#000000" } },
+  { id: "red-yellow-black",    name: "レッド×イエロー×ブラック",        shortName: "RYB",        category: "color-preset", palette: { primary: "#e80013", secondary: "#fcd200", tertiary: "#000000" } },
+  { id: "royal-blue-gold",     name: "ロイヤルブルー×ゴールド",         shortName: "ロイヤル",   category: "color-preset", palette: { primary: "#00469c", secondary: "#030303", tertiary: "#b39240" } },
+  { id: "cobalt-red",          name: "コバルト×レッド",                 shortName: "コバルト",   category: "color-preset", palette: { primary: "#223f99", secondary: "#ed1f22" } },
+  { id: "coral-gold",          name: "コーラル×ゴールド",               shortName: "コーラル",   category: "color-preset", palette: { primary: "#ed1a21", secondary: "#b8a469", tertiary: "#000000" } },
+  { id: "ocean-amber",         name: "オーシャン×アンバー",             shortName: "オーシャン", category: "color-preset", palette: { primary: "#015caa", secondary: "#000000", tertiary: "#fac000" } },
+  { id: "teal-white",          name: "ティール×ホワイト",               shortName: "ティール",   category: "color-preset", palette: { primary: "#0085a6", secondary: "#f2f2f2" }, rules: { secondaryIsLight: true } },
+  { id: "flame-gold",          name: "フレーム×ゴールド",               shortName: "フレーム",   category: "color-preset", palette: { primary: "#fc0301", secondary: "#c69933", tertiary: "#000000" } },
+  { id: "sky-gray",            name: "スカイ×グレー",                   shortName: "スカイ",     category: "color-preset", palette: { primary: "#066fb9", secondary: "#a6a6a1" } },
+  { id: "orange-teal",         name: "オレンジ×ティール",               shortName: "OT",         category: "color-preset", palette: { primary: "#e84509", secondary: "#02adab" } },
+  { id: "azure-pink",          name: "アジュール×ピンク",               shortName: "アジュール", category: "color-preset", palette: { primary: "#00a5cf", secondary: "#ed40a8" } },
+  { id: "deep-navy-white",     name: "ディープネイビー×ホワイト",       shortName: "DN×W",       category: "color-preset", palette: { primary: "#1d2d52", secondary: "#ffffff" }, rules: { secondaryIsLight: true } },
+  { id: "champagne-navy",      name: "シャンパン×ネイビー",             shortName: "シャンパン", category: "color-preset", palette: { primary: "#d6bb72", secondary: "#003d66", tertiary: "#c41a1f" }, rules: { primaryIsLight: true } },
 ];
 
 /** モノクローム先頭 → チームプリセット順の表示用リスト @type {ThemeDefinition[]} */
@@ -1265,8 +1282,25 @@ const ALL_THEMES = [...THEMES, ...TEAM_THEME_PRESETS];
 
 const THEME_KEY = "bb_theme_id";
 const THEME_ONBOARDING_KEY = "bb_theme_onboarding_seen";
+const FAVORITE_TEAM_KEY = "bb_favorite_team_name";
 
 let activeThemeId = localStorage.getItem(THEME_KEY) || "bleague-monochrome";
+
+function loadFavoriteTeamName() {
+  return localStorage.getItem(FAVORITE_TEAM_KEY) || "";
+}
+function saveFavoriteTeamName(name) {
+  localStorage.setItem(FAVORITE_TEAM_KEY, name.trim());
+}
+
+/** favoriteTeamName と home/away を照合して初期応援側を返す */
+function detectSupportedSide(homeTeam, awayTeam) {
+  const fav = loadFavoriteTeamName().toLowerCase();
+  if (!fav) return "";
+  if (homeTeam.trim().toLowerCase() === fav) return "home";
+  if (awayTeam.trim().toLowerCase() === fav) return "away";
+  return "";
+}
 
 /** @param {string} id @returns {ThemeDefinition} */
 function getThemeById(id) {
@@ -1468,9 +1502,34 @@ function initQuickFieldNav() {
   });
 }
 
+/** 推しチーム設定UIの初期化 */
+function initFavoriteTeam() {
+  const input = document.getElementById("favoriteTeamNameInput");
+  const btn   = document.getElementById("btnSaveFavoriteTeam");
+  if (!input || !btn) return;
+  input.value = loadFavoriteTeamName();
+  btn.addEventListener("click", () => {
+    saveFavoriteTeamName(input.value);
+    btn.textContent = "保存しました";
+    setTimeout(() => { btn.textContent = "保存"; }, 1500);
+  });
+}
+
+/** チーム名変更時に応援側を自動再評価する（クイックフォーム用） */
+function initSupportedSideAutoDetect() {
+  const update = () => {
+    const side = detectSupportedSide(qf_homeTeam.value.trim(), qf_awayTeam.value.trim());
+    if (side) setQfSupportedSide(side);
+  };
+  qf_homeTeam.addEventListener("change", update);
+  qf_awayTeam.addEventListener("change", update);
+}
+
 // ===== Init =====
 initTheme();
 show("list");
 initAuth();
 initSuggestionFilters();
 initQuickFieldNav();
+initFavoriteTeam();
+initSupportedSideAutoDetect();

@@ -232,6 +232,20 @@
       <div class="card">
         <div class="hd">
           <div class="title">
+            <h2>推しチーム名</h2>
+            <div class="meta">試合入力時に一致すると、応援側を自動で選びます</div>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="btn-row">
+            <input id="favoriteTeamNameInput" type="text" placeholder="例：千葉ジェッツ" />
+            <button class="btn primary" id="btnSaveFavoriteTeam">保存</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="hd">
+          <div class="title">
             <h2>テーマ</h2>
             <div class="meta" id="currentThemeName">B.LEAGUE 白黒</div>
           </div>
@@ -308,6 +322,23 @@
         <span class="quickFieldLabel">会場</span>
         <input id="qf_venue" type="text" placeholder="例：LaLa arena TOKYO-BAY" autocomplete="off" enterkeyhint="next" />
         <div class="qeSuggestions" id="sug_venue"></div>
+      </div>
+      <div class="quickFieldRow">
+        <span class="quickFieldLabel">応援していたのは</span>
+        <div class="qfSupportedSide">
+          <label class="qfSideOption">
+            <input type="radio" name="qf_supportedSide" value="home" />
+            <span>ホーム</span>
+          </label>
+          <label class="qfSideOption">
+            <input type="radio" name="qf_supportedSide" value="away" />
+            <span>アウェイ</span>
+          </label>
+          <label class="qfSideOption">
+            <input type="radio" name="qf_supportedSide" value="" />
+            <span>未選択</span>
+          </label>
+        </div>
       </div>
       <div class="quickFieldRow">
         <span class="quickFieldLabel">ひとことメモ</span>

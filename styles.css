@@ -503,6 +503,32 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   color: var(--text);
 }
 
+/* --- 応援側セレクタ --- */
+.qfSupportedSide {
+  display: flex; gap: 8px; padding: 10px 0 14px;
+}
+.qfSideOption {
+  display: flex; align-items: center; gap: 0;
+  cursor: pointer;
+}
+.qfSideOption input[type="radio"] { display: none; }
+.qfSideOption span {
+  display: inline-flex; align-items: center;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  font-size: 13px; color: var(--text-muted);
+  background: transparent;
+  transition: border-color .15s, background .15s, color .15s;
+  white-space: nowrap;
+}
+.qfSideOption input[type="radio"]:checked + span {
+  border-color: var(--team-primary);
+  background: var(--team-primary-soft);
+  color: var(--team-primary);
+  font-weight: 600;
+}
+
 /* --- フッター（保存ボタン固定）--- */
 .quickEntryFooter {
   flex-shrink: 0;
