@@ -25,9 +25,10 @@ function uid() {
 
 function fmtDateTime(iso) {
   if (!iso) return "";
-  // YYYY-MM または YYYY-MM-DD... → 年月のみ表示
-  const m = iso.match(/^(\d{4})-(\d{2})/);
-  if (m) return `${m[1]}/${m[2]}`;
+  const full = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (full) return `${full[1]}/${full[2]}/${full[3]}`;
+  const month = iso.match(/^(\d{4})-(\d{2})/);
+  if (month) return `${month[1]}/${month[2]}`;
   return iso;
 }
 
@@ -190,28 +191,30 @@ function updateFResult() {
 // ===== Supabase read =====
 function rowToRecord(row) {
   return {
-    id:         row.id,
-    dateTime:   row.date_time,
-    league:     row.league,
-    homeTeam:   row.home_team,
-    awayTeam:   row.away_team,
-    venue:      row.venue,
-    seat:       row.seat,
-    finalHome:  row.final_home,
-    finalAway:  row.final_away,
-    result:     row.result,
-    useQuarters: row.use_quarters,
-    quarters:   row.quarters,
-    players:    row.players,
-    flow:       row.flow,
-    play:       row.play,
-    mvp:        row.mvp,
-    food:       row.food,
-    event:      row.event,
-    cheer:      row.cheer,
-    note:       row.note,
-    createdAt:  row.created_at,
-    updatedAt:  row.updated_at,
+    id:           row.id,
+    dateTime:     row.date_time,
+    league:       row.league,
+    homeTeam:     row.home_team,
+    awayTeam:     row.away_team,
+    venue:        row.venue,
+    seat:         row.seat,
+    finalHome:    row.final_home,
+    finalAway:    row.final_away,
+    result:       row.result,
+    supportedSide: row.supported_side || "",
+    supportedTeam: row.supported_team || "",
+    useQuarters:  row.use_quarters,
+    quarters:     row.quarters,
+    players:      row.players,
+    flow:         row.flow,
+    play:         row.play,
+    mvp:          row.mvp,
+    food:         row.food,
+    event:        row.event,
+    cheer:        row.cheer,
+    note:         row.note,
+    createdAt:    row.created_at,
+    updatedAt:    row.updated_at,
   };
 }
 
@@ -249,7 +252,9 @@ function recordToRow(rec, userId) {
     seat:         rec.seat || null,
     final_home:   rec.finalHome,
     final_away:   rec.finalAway,
-    result:       rec.result || null,
+    result:         rec.result || null,
+    supported_side: rec.supportedSide || null,
+    supported_team: rec.supportedTeam || null,
     use_quarters: !!rec.useQuarters,
     quarters:     rec.quarters || [],
     players:      rec.players || [],
@@ -559,9 +564,9 @@ function resetQfdSection() {
 
 // ===== Quick Form =====
 function openQuickFormForNew() {
-  // 今月を YYYY-MM 形式で自動入力
+  // 今日の日付を YYYY-MM-DD 形式で自動入力
   const now = new Date();
-  qf_dateTime.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, "0")}`;
+  qf_dateTime.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
 
   qf_league.value    = "";
   qf_homeTeam.value  = "";
@@ -724,10 +729,8 @@ function clearForm(){
 }
 
 function fillForm(rec){
-  // type="month" には YYYY-MM が必要。既存データが YYYY-MM-DD 以上の場合は切り詰め
-  const dtRaw = rec.dateTime || "";
-  const dtMonth = dtRaw.match(/^(\d{4}-\d{2})/) ? dtRaw.slice(0, 7) : "";
-  f_dateTime.value = dtMonth;
+  // type="date" には YYYY-MM-DD が必要。それ以外の形式はそのままセット（空になるだけ）
+  f_dateTime.value = (rec.dateTime || "").slice(0, 10);
   f_league.value = rec.league || "";
   f_homeTeam.value = rec.homeTeam || "";
   f_awayTeam.value = rec.awayTeam || "";
@@ -1197,20 +1200,44 @@ function renderHome() {
     const score    = hasScore ? `${latest.finalHome} - ${latest.finalAway}` : "—";
     const dt       = fmtDateTime(latest.dateTime) || "日付未設定";
     const meta     = [dt, latest.league].filter(Boolean).join(" · ");
+    const supportedHome = latest.supportedSide === "home";
+    const supportedAway = latest.supportedSide === "away";
+    const homeLabelHtml = `<span class="homeHero-sideLabel${supportedHome ? " homeHero-sideLabel--on" : ""}">${supportedHome ? '<span class="homeHero-supportMark">★</span> ' : ""}HOME</span>`;
+    const awayLabelHtml = `<span class="homeHero-sideLabel${supportedAway ? " homeHero-sideLabel--on" : ""}">${supportedAway ? '<span class="homeHero-supportMark">★</span> ' : ""}AWAY</span>`;
+    const resultCat = getResultCategory(latest); // "win"|"loss"|"draw"|"undecided"|""
+    const outcomeMap = { win: "WIN", loss: "LOSE", draw: "DRAW" };
+    const outcomeLabel = (supportedHome || supportedAway) ? (outcomeMap[resultCat] || "") : "";
+    const outcomeHtml = outcomeLabel
+      ? `<div class="homeHero-outcome homeHero-outcome--${resultCat}">${outcomeLabel}</div>`
+      : "";
+    const venueHtml = latest.venue
+      ? `<span class="homeHero-venueText">📍 ${esc(latest.venue)}</span>`
+      : "";
+    const subHtml = venueHtml
+      ? `<div class="homeHero-subRow">${venueHtml}</div>`
+      : "";
     heroHtml = `
       <div class="card homeHero">
-        <div class="homeHero-meta">${esc(meta)}</div>
-        <div class="homeHero-matchup">
-          <span class="homeHero-team">${esc(homeTeam)}</span>
-          <span class="homeHero-score">${esc(score)}</span>
-          <span class="homeHero-team homeHero-team--away">${esc(awayTeam)}</span>
+        <div class="homeHero-eyebrow">${esc(meta)}</div>
+        <div class="homeHero-arena">
+          <div class="homeHero-side homeHero-side--home">
+            ${homeLabelHtml}
+            <div class="homeHero-teamName">${esc(homeTeam)}</div>
+          </div>
+          <div class="homeHero-scoreShelf">
+            <span class="homeHero-score">${esc(score)}</span>
+          </div>
+          ${outcomeHtml}
+          <div class="homeHero-side homeHero-side--away">
+            ${awayLabelHtml}
+            <div class="homeHero-teamName">${esc(awayTeam)}</div>
+          </div>
         </div>
-        ${latest.result ? `<div class="homeHero-result">${esc(latest.result)}</div>` : ""}
-        ${latest.venue ? `<div class="homeHero-venue">📍 ${esc(latest.venue)}</div>` : ""}
-        ${latest.note  ? `<div class="homeHero-memo">${esc(latest.note)}</div>` : ""}
+        ${subHtml}
+        ${latest.note ? `<div class="homeHero-memo">${esc(latest.note)}</div>` : ""}
         <div class="homeHero-actions">
-          <button class="btn ghost homeHero-btn" data-action="edit"   data-id="${latest.id}">追記・編集</button>
-          <button class="btn primary homeHero-btn" data-action="detail" data-id="${latest.id}">詳細を見る</button>
+          <button class="btn homeHero-btnPrimary homeHero-btn" data-action="detail" data-id="${latest.id}">詳細を見る</button>
+          <button class="homeHero-btnEdit homeHero-btn" data-action="edit" data-id="${latest.id}">追記・編集</button>
         </div>
       </div>`;
   }
