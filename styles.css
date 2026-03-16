@@ -918,6 +918,29 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 /* ===== App Header ===== */
 .appHeader { padding: 8px 16px 6px; }
 
+/* ===== List Controls ===== */
+.listControls { padding: 14px 16px 16px; }
+.listControls-titleRow {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.listControls-title { font-size: 17px; font-weight: 700; margin: 0; }
+.listFilter-row { display: flex; gap: 6px; margin-top: 8px; }
+.listFilter-select {
+  flex: 1; min-width: 0;
+  font-size: 12px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 /* ===== Home Screen ===== */
 
 .pageIntro          { padding: 10px 16px 6px; }
@@ -925,7 +948,11 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 .pageIntro__subtitle{ font-size: 12px; color: var(--text-muted); margin: 0; }
 
 /* Hero card */
-.homeHero { padding: 16px 18px 14px; }
+.homeHero {
+  padding: 18px 18px 16px;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+  position: relative;
+}
 .emptyHeroCard {
   display: flex; flex-direction: column; align-items: center;
   text-align: center; padding: 20px 20px 18px; gap: 6px; min-height: auto;
@@ -934,31 +961,108 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 .homeHero-emptyTitle { font-size: 16px; font-weight: 600; }
 .homeHero-emptySub   { font-size: 13px; color: var(--text-muted); }
 
-.homeHero-meta {
-  font-size: 11px; color: var(--text-muted); letter-spacing: .2px; margin-bottom: 14px;
+/* Eyebrow: date · league */
+.homeHero-eyebrow {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: .8px; text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 14px;
 }
-.homeHero-matchup {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 6px; margin-bottom: 8px;
+
+/* Arena: matchup structure */
+.homeHero-arena { display: flex; flex-direction: column; margin-bottom: 14px; }
+.homeHero-side  { display: flex; flex-direction: column; gap: 3px; }
+.homeHero-side--home { align-items: flex-start; }
+.homeHero-side--away { align-items: flex-end; }
+.homeHero-sideLabel {
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text-muted); opacity: 0.6;
 }
-.homeHero-team {
-  font-size: 14px; font-weight: 700; flex: 1; line-height: 1.3;
+.homeHero-sideLabel--on { opacity: 1; color: var(--text-muted); }
+.homeHero-sideLabel .homeHero-supportMark {
+  color: var(--team-primary); font-size: 7px;
+  vertical-align: 1px; letter-spacing: 0;
 }
-.homeHero-team--away { text-align: right; }
+.homeHero-teamName {
+  font-size: 15px; font-weight: 700; line-height: 1.25; max-width: 78%;
+}
+.homeHero-side--away .homeHero-teamName { text-align: right; }
+
+/* Score shelf: フェードラインの上にスコアが浮くエフェクト */
+.homeHero-scoreShelf {
+  display: flex; align-items: center;
+  padding: 10px 0;
+}
+.homeHero-scoreShelf::before,
+.homeHero-scoreShelf::after {
+  content: ''; flex: 1; height: 1px;
+}
+.homeHero-scoreShelf::before {
+  background: linear-gradient(90deg, transparent, var(--border));
+  margin-right: 14px;
+}
+.homeHero-scoreShelf::after {
+  background: linear-gradient(90deg, var(--border), transparent);
+  margin-left: 14px;
+}
 .homeHero-score {
-  font-size: 24px; font-weight: 700; color: var(--team-primary);
-  white-space: nowrap; padding: 0 8px; flex-shrink: 0;
+  font-size: 34px; font-weight: 800;
+  color: var(--team-primary);
+  letter-spacing: 2px; white-space: nowrap; line-height: 1;
+  flex-shrink: 0;
 }
-.homeHero-result { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-.homeHero-venue  { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+
+/* Outcome label (WIN / LOSE / DRAW) — score shelf の直下 */
+.homeHero-outcome {
+  text-align: center;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  margin: -4px 0 4px;
+}
+.homeHero-outcome--win  { color: #16a34a; }
+.homeHero-outcome--loss { color: #dc2626; }
+.homeHero-outcome--draw { color: var(--text-muted); }
+
+/* Sub row: result badge + venue */
+.homeHero-subRow {
+  display: flex; align-items: center;
+  gap: 8px; margin-bottom: 8px; flex-wrap: wrap;
+}
+.homeHero-badge {
+  font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 4px; letter-spacing: .3px;
+}
+.homeHero-badge--win       { background: rgba(34,197,94,.12);   color: #16a34a; }
+.homeHero-badge--loss      { background: rgba(239,68,68,.10);   color: #dc2626; }
+.homeHero-badge--draw      { background: rgba(107,114,128,.12); color: var(--text-muted); }
+.homeHero-badge--undecided { background: var(--surface-2); color: var(--text-muted); }
+.homeHero-venueText { font-size: 11px; color: var(--text-muted); }
+
 .homeHero-memo {
-  font-size: 13px; color: var(--text); margin: 8px 0 0;
-  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: 13px; color: var(--text); margin: 2px 0 0;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;
 }
-.homeHero-actions {
-  display: flex; gap: 8px; margin-top: 16px;
+
+/* Actions */
+.homeHero-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.homeHero-btnPrimary {
+  flex: 1; justify-content: center;
+  background: transparent; box-shadow: none;
+  border-color: var(--team-primary); color: var(--team-primary);
+  font-size: 13px; padding: 9px 12px;
 }
-.homeHero-actions .homeHero-btn { flex: 1; justify-content: center; }
+.homeHero-btnPrimary:hover { background: var(--team-primary-soft); border-color: var(--team-primary); }
+.homeHero-btnEdit {
+  -webkit-appearance: none; appearance: none;
+  background: none; border: none; box-shadow: none;
+  font-size: 12px; color: var(--text-muted);
+  cursor: pointer; padding: 4px 0;
+  font-family: inherit; font-weight: 500;
+  white-space: nowrap; flex-shrink: 0;
+}
+.homeHero-btnEdit:hover { color: var(--text); }
 
 /* Summary 2×2 */
 .homeSummaryGrid {
