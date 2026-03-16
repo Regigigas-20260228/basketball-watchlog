@@ -28,6 +28,11 @@ function uid() {
 
 function fmtDateTime(iso) {
   if (!iso) return "";
+  // Date-only: YYYY-MM-DD — display without time
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    const [y, m, d] = iso.split("-");
+    return `${y}/${m}/${d}`;
+  }
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   const pad = (n)=> String(n).padStart(2,"0");
@@ -47,6 +52,7 @@ function computeResult(finalHome, finalAway, homeTeam, awayTeam) {
 const viewList = document.getElementById("viewList");
 const viewDetail = document.getElementById("viewDetail");
 const viewForm = document.getElementById("viewForm");
+const viewQuickForm = document.getElementById("viewQuickForm");
 const viewStats = document.getElementById("viewStats");
 const viewAccount = document.getElementById("viewAccount");
 
@@ -60,6 +66,16 @@ const detailMeta = document.getElementById("detailMeta");
 const detailBody = document.getElementById("detailBody");
 
 const formTitle = document.getElementById("formTitle");
+
+// quick form fields
+const qf_dateTime  = document.getElementById("qf_dateTime");
+const qf_league    = document.getElementById("qf_league");
+const qf_homeTeam  = document.getElementById("qf_homeTeam");
+const qf_awayTeam  = document.getElementById("qf_awayTeam");
+const qf_finalHome = document.getElementById("qf_finalHome");
+const qf_finalAway = document.getElementById("qf_finalAway");
+const qf_venue     = document.getElementById("qf_venue");
+const qf_memo      = document.getElementById("qf_memo");
 
 // form fields
 const f_dateTime = document.getElementById("f_dateTime");
@@ -87,6 +103,9 @@ const quartersBody = document.getElementById("quartersBody");
 const playersBody = document.getElementById("playersBody");
 const quartersContent = document.getElementById("quartersContent");
 const quartersAddArea = document.getElementById("quartersAddArea");
+
+// bottom dock (入力モード中は非表示)
+const bottomDock = document.getElementById("bottomDock");
 
 // auth refs
 const authEmail = document.getElementById("authEmail");
@@ -116,7 +135,12 @@ document.getElementById("btnNavReview").addEventListener("click", () => {
 document.getElementById("btnNavAccount").addEventListener("click", () => {
   show("account"); setNavActive("btnNavAccount");
 });
-document.getElementById("btnPrimaryRecord").addEventListener("click", () => openFormForNew());
+document.getElementById("btnPrimaryRecord").addEventListener("click", () => openQuickFormForNew());
+
+// quick form buttons
+document.getElementById("btnQuickCancel").addEventListener("click", () => show("list"));
+document.getElementById("btnQuickCancelFooter").addEventListener("click", () => show("list"));
+document.getElementById("btnQuickSave").addEventListener("click", () => onQuickSave().catch(console.error));
 
 // buttons
 document.getElementById("btnBack").addEventListener("click", () => show("list"));
@@ -263,11 +287,17 @@ function show(which){
   viewList.classList.toggle("hide", which !== "list");
   viewDetail.classList.toggle("hide", which !== "detail");
   viewForm.classList.toggle("hide", which !== "form");
+  viewQuickForm.classList.toggle("hide", which !== "quickForm");
   viewStats.classList.toggle("hide", which !== "stats");
   viewAccount.classList.toggle("hide", which !== "account");
   if (which === "list") renderList();
+
+  // 入力モード（クイック記録 / 詳細フォーム）中はボトムナビを隠す
+  const inputModes = ["form", "quickForm"];
+  bottomDock.classList.toggle("hide", inputModes.includes(which));
+
   const navMap = { list: "btnNavRecords", detail: "btnNavRecords", stats: "btnNavReview", account: "btnNavAccount" };
-  setNavActive(navMap[which] || null, which === "form");
+  setNavActive(navMap[which] || null, which === "form" || which === "quickForm");
 }
 
 // ===== Quarters =====
@@ -379,6 +409,171 @@ function readPlayers(){
 function fillPlayers(ps){
   playersBody.innerHTML = "";
   (ps && ps.length ? ps : [{}]).forEach(p => addPlayerRow(p));
+}
+
+// ===== Suggestions =====
+/**
+ * records から指定フィールドのユニーク値を順序保持で返す
+ * 将来フィルタ機能にも流用しやすいよう汎用化
+ * @param {Array} records @param {string} key @returns {string[]}
+ */
+function getUniqueFieldValues(records, key) {
+  const seen = new Set();
+  return records
+    .map(r => (r[key] || "").trim())
+    .filter(v => v && !seen.has(v) && seen.add(v));
+}
+
+function getUniqueLeagues(records) {
+  return getUniqueFieldValues(records, "league");
+}
+function getUniqueVenues(records) {
+  return getUniqueFieldValues(records, "venue");
+}
+/** ホーム・アウェイ両方から重複なくチーム名を返す */
+function getUniqueTeams(records) {
+  const seen = new Set();
+  const result = [];
+  records.forEach(r => {
+    [r.homeTeam, r.awayTeam].forEach(t => {
+      const v = (t || "").trim();
+      if (v && !seen.has(v)) { seen.add(v); result.push(v); }
+    });
+  });
+  return result;
+}
+
+/**
+ * 候補チップを containerId のコンテナに描画する
+ * @param {string} containerId
+ * @param {string[]} values
+ * @param {HTMLInputElement} inputEl
+ * @param {HTMLElement|null} [nextEl] チップタップ後にフォーカスする次の要素
+ */
+function renderSuggestions(containerId, values, inputEl, nextEl) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = "";
+  values.slice(0, 12).forEach(val => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "qeChip";
+    chip.textContent = val;
+    chip.addEventListener("click", () => {
+      inputEl.value = val;
+      inputEl.dispatchEvent(new Event("input"));
+      if (nextEl) setTimeout(() => nextEl.focus(), 40);
+    });
+    container.appendChild(chip);
+  });
+}
+
+/** 入力ごとに候補を絞り込む（一度だけセット） */
+function initSuggestionFilters() {
+  const setup = (inputEl, sugId, valsFn, nextEl) => {
+    inputEl.addEventListener("input", () => {
+      const q = inputEl.value.trim().toLowerCase();
+      const filtered = valsFn().filter(v => !q || v.toLowerCase().includes(q));
+      renderSuggestions(sugId, filtered, inputEl, nextEl);
+    });
+  };
+  setup(qf_league,   "sug_league",   () => getUniqueLeagues(records), qf_homeTeam);
+  setup(qf_homeTeam, "sug_homeTeam", () => getUniqueTeams(records),   qf_awayTeam);
+  setup(qf_awayTeam, "sug_awayTeam", () => getUniqueTeams(records),   qf_finalHome);
+  setup(qf_venue,    "sug_venue",    () => getUniqueVenues(records),  qf_memo);
+}
+
+// ===== Quick Form =====
+function openQuickFormForNew() {
+  // 今日の日付を YYYY-MM-DD 形式で自動入力
+  const now = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  qf_dateTime.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+
+  qf_league.value    = "";
+  qf_homeTeam.value  = "";
+  qf_awayTeam.value  = "";
+  qf_finalHome.value = "";
+  qf_finalAway.value = "";
+  qf_venue.value     = "";
+  qf_memo.value      = "";
+
+  // 過去入力から候補を初期描画
+  renderSuggestions("sug_league",   getUniqueLeagues(records), qf_league,   qf_homeTeam);
+  renderSuggestions("sug_homeTeam", getUniqueTeams(records),   qf_homeTeam, qf_awayTeam);
+  renderSuggestions("sug_awayTeam", getUniqueTeams(records),   qf_awayTeam, qf_finalHome);
+  renderSuggestions("sug_venue",    getUniqueVenues(records),  qf_venue,    qf_memo);
+
+  show("quickForm");
+  // 最初のフォーカスはホームチーム（日付ではない）
+  setTimeout(() => qf_homeTeam.focus(), 80);
+}
+
+function readQuickForm() {
+  const finalHome = qf_finalHome.value === "" ? null : Number(qf_finalHome.value);
+  const finalAway = qf_finalAway.value === "" ? null : Number(qf_finalAway.value);
+  const homeTeam  = qf_homeTeam.value.trim();
+  const awayTeam  = qf_awayTeam.value.trim();
+  return {
+    id:          null,
+    dateTime:    qf_dateTime.value,
+    league:      qf_league.value.trim(),
+    homeTeam,
+    awayTeam,
+    venue:       qf_venue.value.trim(),
+    seat:        "",
+    finalHome,
+    finalAway,
+    result:      computeResult(finalHome, finalAway, homeTeam, awayTeam),
+    useQuarters: false,
+    quarters:    [],
+    players:     [],
+    flow:        "",
+    play:        "",
+    mvp:         "",
+    food:        "",
+    event:       "",
+    cheer:       "",
+    note:        qf_memo.value.trim(),
+    createdAt:   null,
+    updatedAt:   null,
+  };
+}
+
+async function onQuickSave() {
+  const homeTeam = qf_homeTeam.value.trim();
+  const awayTeam = qf_awayTeam.value.trim();
+  const league   = qf_league.value.trim();
+
+  if (!homeTeam && !awayTeam && !league) {
+    alert("チーム名かリーグ名を入力してください。");
+    return;
+  }
+
+  const rec = readQuickForm();
+  const { data: userData } = await supabaseClient.auth.getUser();
+  const user = userData.user;
+
+  if (user) {
+    try {
+      const saved = await saveRecordToSupabase(rec);
+      await refreshRecords();
+      currentId = saved.id;
+      openDetail(saved.id);
+    } catch (e) {
+      console.error(e);
+      alert("保存に失敗しました: " + e.message);
+    }
+  } else {
+    rec.id        = uid();
+    rec.createdAt = new Date().toISOString();
+    rec.updatedAt = rec.createdAt;
+    records.unshift(rec);
+    records.sort((a,b) => (b.dateTime || b.updatedAt || "").localeCompare(a.dateTime || a.updatedAt || ""));
+    saveRecords(records);
+    currentId = rec.id;
+    openDetail(rec.id);
+  }
 }
 
 // ===== CRUD =====
@@ -661,7 +856,16 @@ function openDetail(id){
     ])}
     <div class="hr"></div>
     <div class="small">更新: ${fmtDateTime(rec.updatedAt) || "—"}</div>
+    <div class="detailAddMore">
+      <div>
+        <div class="detailAddMore-text">クオーター・選手・メモを追加できます</div>
+        <div class="detailAddMore-sub">詳しく書くと振り返りに役立ちます</div>
+      </div>
+      <button class="btn primary" id="btnDetailAddMore">詳しく追記する</button>
+    </div>
   `;
+
+  document.getElementById("btnDetailAddMore").addEventListener("click", () => openFormForEdit(currentId));
 
   show("detail");
 }
@@ -1248,7 +1452,25 @@ function initTheme() {
   }
 }
 
+/** Enter キーで次フィールドへ移動（クイック記録フォーム用） */
+function initQuickFieldNav() {
+  const fields = [
+    qf_dateTime, qf_league, qf_homeTeam, qf_awayTeam,
+    qf_finalHome, qf_finalAway, qf_venue, qf_memo,
+  ];
+  fields.forEach((el, i) => {
+    el.addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      const next = fields[i + 1];
+      if (next) next.focus();
+    });
+  });
+}
+
 // ===== Init =====
 initTheme();
 show("list");
 initAuth();
+initSuggestionFilters();
+initQuickFieldNav();

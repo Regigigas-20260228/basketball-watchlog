@@ -51,7 +51,7 @@
         </div>
         <div class="right">
           <button class="btn" id="btnBack">← 戻る</button>
-          <button class="btn" id="btnEdit">編集</button>
+          <button class="btn" id="btnEdit">詳しく追記・編集</button>
           <button class="btn danger" id="btnDelete">削除</button>
         </div>
       </div>
@@ -263,8 +263,67 @@
   </footer>
 </main>
 
+<!-- ===== Quick Entry Overlay (全画面入力モード) ===== -->
+<div id="viewQuickForm" class="quickEntryOverlay hide">
+  <div class="quickEntrySheet">
+    <div class="quickEntryHeader">
+      <div class="quickEntryHeader-titles">
+        <h2 class="quickEntryHeader-title">まず記録する</h2>
+        <p class="quickEntryHeader-sub">細かい内容はあとから追加できます</p>
+      </div>
+      <button class="quickEntryClose" id="btnQuickCancel" aria-label="閉じる">✕</button>
+    </div>
+
+    <div class="quickEntryBody">
+      <div class="quickFieldRow">
+        <span class="quickFieldLabel">観戦日</span>
+        <input id="qf_dateTime" type="date" enterkeyhint="next" />
+      </div>
+      <div class="quickFieldRow">
+        <span class="quickFieldLabel">リーグ</span>
+        <input id="qf_league" type="text" placeholder="B.LEAGUE / NBA…" autocomplete="off" enterkeyhint="next" />
+        <div class="qeSuggestions" id="sug_league"></div>
+      </div>
+      <div class="quickFieldRow">
+        <span class="quickFieldLabel">ホームチーム</span>
+        <input id="qf_homeTeam" type="text" placeholder="例：千葉ジェッツ" autocomplete="off" enterkeyhint="next" />
+        <div class="qeSuggestions" id="sug_homeTeam"></div>
+      </div>
+      <div class="quickFieldRow">
+        <span class="quickFieldLabel">アウェイチーム</span>
+        <input id="qf_awayTeam" type="text" placeholder="例：琉球ゴールデンキングス" autocomplete="off" enterkeyhint="next" />
+        <div class="qeSuggestions" id="sug_awayTeam"></div>
+      </div>
+      <div class="quickFieldRow quickFieldRow--cols2">
+        <div class="quickFieldCol">
+          <span class="quickFieldLabel">スコア（ホーム）</span>
+          <input id="qf_finalHome" type="number" inputmode="numeric" min="0" placeholder="82" enterkeyhint="next" />
+        </div>
+        <div class="quickFieldCol">
+          <span class="quickFieldLabel">スコア（アウェイ）</span>
+          <input id="qf_finalAway" type="number" inputmode="numeric" min="0" placeholder="78" enterkeyhint="next" />
+        </div>
+      </div>
+      <div class="quickFieldRow">
+        <span class="quickFieldLabel">会場</span>
+        <input id="qf_venue" type="text" placeholder="例：LaLa arena TOKYO-BAY" autocomplete="off" enterkeyhint="next" />
+        <div class="qeSuggestions" id="sug_venue"></div>
+      </div>
+      <div class="quickFieldRow">
+        <span class="quickFieldLabel">ひとことメモ</span>
+        <input id="qf_memo" type="text" placeholder="例：接戦で最高だった！" enterkeyhint="done" />
+      </div>
+    </div>
+
+    <div class="quickEntryFooter">
+      <button class="btn" id="btnQuickCancelFooter">キャンセル</button>
+      <button class="btn primary quickEntryFooter-save" id="btnQuickSave">保存する</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== Bottom Dock ===== -->
-<div class="bottomDock">
+<div class="bottomDock" id="bottomDock">
   <nav class="bottomNav">
     <button class="navItem active" id="btnNavRecords">
       <span class="navIcon">☰</span>
