@@ -50,6 +50,7 @@ const viewList = document.getElementById("viewList");
 const viewDetail = document.getElementById("viewDetail");
 const viewForm = document.getElementById("viewForm");
 const viewQuickForm = document.getElementById("viewQuickForm");
+const viewBest = document.getElementById("viewBest");
 const viewStats = document.getElementById("viewStats");
 const viewAccount = document.getElementById("viewAccount");
 
@@ -119,18 +120,17 @@ const btnStartAnonymous = document.getElementById("btnStartAnonymous");
 const authHelp = document.getElementById("authHelp");
 
 // ===== Nav management =====
-function setNavActive(navId, ctaActive) {
+function setNavActive(navId) {
   document.querySelectorAll(".navItem").forEach(el => el.classList.remove("active"));
-  document.getElementById("btnPrimaryRecord").classList.toggle("active", !!ctaActive);
   if (navId) document.getElementById(navId).classList.add("active");
 }
 
-document.getElementById("btnNavRecords").addEventListener("click", () => {
-  show("list"); setNavActive("btnNavRecords");
+document.getElementById("btnPrimaryRecord").addEventListener("click", () => openQuickFormForNew());
+document.getElementById("btnNavList").addEventListener("click", () => {
+  show("list"); setNavActive("btnNavList");
 });
-document.getElementById("btnNavSearch").addEventListener("click", () => {
-  show("list"); setNavActive("btnNavRecords");
-  setTimeout(() => { qEl.focus(); qEl.scrollIntoView({ behavior: "smooth", block: "center" }); }, 50);
+document.getElementById("btnNavBest").addEventListener("click", () => {
+  show("best"); setNavActive("btnNavBest");
 });
 document.getElementById("btnNavReview").addEventListener("click", () => {
   show("stats"); setNavActive("btnNavReview");
@@ -138,7 +138,6 @@ document.getElementById("btnNavReview").addEventListener("click", () => {
 document.getElementById("btnNavAccount").addEventListener("click", () => {
   show("account"); setNavActive("btnNavAccount");
 });
-document.getElementById("btnPrimaryRecord").addEventListener("click", () => openQuickFormForNew());
 
 // quick form buttons
 document.getElementById("btnQuickCancel").addEventListener("click", () => show("list"));
@@ -287,6 +286,7 @@ function show(which){
   viewDetail.classList.toggle("hide", which !== "detail");
   viewForm.classList.toggle("hide", which !== "form");
   viewQuickForm.classList.toggle("hide", which !== "quickForm");
+  viewBest.classList.toggle("hide", which !== "best");
   viewStats.classList.toggle("hide", which !== "stats");
   viewAccount.classList.toggle("hide", which !== "account");
   if (which === "list")  renderList();
@@ -296,8 +296,9 @@ function show(which){
   const inputModes = ["form", "quickForm"];
   bottomDock.classList.toggle("hide", inputModes.includes(which));
 
-  const navMap = { list: "btnNavRecords", detail: "btnNavRecords", stats: "btnNavReview", account: "btnNavAccount" };
-  setNavActive(navMap[which] || null, which === "form" || which === "quickForm");
+  // detail は「試合一覧」配下として扱う
+  const navMap = { list: "btnNavList", detail: "btnNavList", best: "btnNavBest", stats: "btnNavReview", account: "btnNavAccount" };
+  setNavActive(navMap[which] || null);
 }
 
 // ===== Quarters =====
@@ -1396,7 +1397,7 @@ async function initAuth() {
   const { data } = await supabaseClient.auth.getSession();
   setAuthUI(data.session ? data.session.user : null);
 
-  supabaseClient.auth.onAuthStateChange((event, session) => {
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
     setAuthUI(session ? session.user : null);
     refreshRecords().catch(console.error);
   });

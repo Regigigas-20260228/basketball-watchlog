@@ -203,15 +203,13 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 
 /* ===== Bottom Dock ===== */
 .bottomDock {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; z-index: 20;
   display: flex; align-items: flex-end; justify-content: center;
   gap: 10px;
   padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
   pointer-events: none;
   max-width: 480px; margin: 0 auto;
 }
-/* Make bottomDock span full width but content centered */
-.bottomDock { left: 50%; transform: translateX(-50%); width: 100%; }
 
 .bottomNav {
   display: flex; align-items: center;
@@ -226,9 +224,9 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 .navItem {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 3px; padding: 9px 4px 8px;
+  gap: 3px; padding: 9px 2px 8px;
   background: none; border: none; cursor: pointer;
-  color: var(--text-muted); font-size: 10px; font-weight: 600;
+  color: var(--text-muted); font-size: 9px; font-weight: 600;
   font-family: inherit;
   border-radius: 999px;
   transition: color .15s, background .15s;
@@ -238,7 +236,7 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 }
 .navItem:active { opacity: .65; }
 .navItem.active { color: var(--team-primary); background: var(--team-primary-soft); }
-.navItem .navIcon { font-size: 18px; line-height: 1; }
+.navItem .navIcon { font-size: 17px; line-height: 1; }
 
 .bottomPrimaryAction { pointer-events: all; flex-shrink: 0; }
 .primaryCTA {
@@ -254,7 +252,6 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   -webkit-tap-highlight-color: transparent;
 }
 .primaryCTA:active { transform: scale(.93); background: var(--team-primary-hover); }
-.primaryCTA.active { background: var(--team-primary-hover); box-shadow: 0 2px 10px var(--team-primary-glow); }
 .primaryCTA .ctaIcon { font-size: 26px; font-weight: 700; line-height: 1; }
 .primaryCTA .ctaLabel { font-size: 9px; font-weight: 700; letter-spacing: .3px; }
 

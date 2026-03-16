@@ -22,20 +22,20 @@
     <div class="card">
       <div class="hd">
         <div class="title">
-          <h2>記録一覧</h2>
-          <div class="meta">タップで詳細 / 編集</div>
+          <h2>試合一覧</h2>
+          <div class="meta">検索・絞り込みで記録した試合を見つけられます</div>
         </div>
         <span class="pill" id="countPill">0件</span>
       </div>
       <div class="bd">
         <div class="search">
-          <input id="q" type="search" placeholder="検索：リーグ / チーム / 会場 / メモ など" />
+          <input id="q" type="search" placeholder="リーグ / チーム / 会場 / メモ など" />
           <button class="btn" id="btnClearQ">クリア</button>
         </div>
         <div class="hr"></div>
         <div id="list" class="list"></div>
         <div id="empty" class="empty hide">
-          まだ記録がありません。下の「＋ 新規」から追加できます。
+          まだ試合が記録されていません。「記録する」から追加できます。
         </div>
       </div>
     </div>
@@ -203,6 +203,26 @@
 
           <div class="hr"></div>
           <div class="small">※ 登録なしでも記録できます。アカウント登録すると、機種変更や別端末でも記録を引き継げます。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BEST -->
+  <section id="viewBest" class="hide">
+    <div class="view-stack">
+      <div class="card">
+        <div class="hd">
+          <div class="title">
+            <h2>マイベスト</h2>
+            <div class="meta">自分なりのランキングやお気に入りをまとめる</div>
+          </div>
+        </div>
+        <div class="bd">
+          <p style="color:var(--text-muted); font-size:14px; line-height:1.8; margin:0">
+            観戦した試合の中から、自分なりのベスト試合・ベストチームを選んでまとめられるようにします。
+          </p>
+          <p style="color:var(--text-muted); font-size:12px; margin:12px 0 0; opacity:.7">現在は準備中です</p>
         </div>
       </div>
     </div>
@@ -423,13 +443,13 @@
 <!-- ===== Bottom Dock ===== -->
 <div class="bottomDock" id="bottomDock">
   <nav class="bottomNav">
-    <button class="navItem active" id="btnNavRecords">
+    <button class="navItem active" id="btnNavList">
       <span class="navIcon">☰</span>
-      <span>記録</span>
+      <span>試合一覧</span>
     </button>
-    <button class="navItem" id="btnNavSearch">
-      <span class="navIcon">🔍</span>
-      <span>さがす</span>
+    <button class="navItem" id="btnNavBest">
+      <span class="navIcon">★</span>
+      <span>マイベスト</span>
     </button>
     <button class="navItem" id="btnNavReview">
       <span class="navIcon">📊</span>
