@@ -24,24 +24,41 @@
 
   <!-- LIST -->
   <section id="viewList" class="hide">
-    <div class="card">
-      <div class="hd">
-        <div class="title">
-          <h2>試合一覧</h2>
-          <div class="meta">検索・絞り込みで記録した試合を見つけられます</div>
+    <div class="view-stack">
+      <div class="card listControls">
+        <div class="listControls-titleRow">
+          <h2 class="listControls-title">試合一覧</h2>
+          <span class="pill" id="countPill">0件</span>
         </div>
-        <span class="pill" id="countPill">0件</span>
-      </div>
-      <div class="bd">
         <div class="search">
-          <input id="q" type="search" placeholder="リーグ / チーム / 会場 / メモ など" />
-          <button class="btn" id="btnClearQ">クリア</button>
+          <input id="q" type="search" placeholder="チーム / 会場 / メモなど" autocomplete="off" />
+          <button class="btn" id="btnClearQ">リセット</button>
         </div>
-        <div class="hr"></div>
-        <div id="list" class="list"></div>
-        <div id="empty" class="empty hide">
-          まだ試合が記録されていません。「記録する」から追加できます。
+        <div class="listFilter-row">
+          <select id="listSort" class="listFilter-select">
+            <option value="desc">新しい順</option>
+            <option value="asc">古い順</option>
+          </select>
+          <select id="filterResult" class="listFilter-select">
+            <option value="">結果: すべて</option>
+            <option value="win">勝利</option>
+            <option value="loss">敗戦</option>
+            <option value="draw">引き分け</option>
+            <option value="undecided">勝敗未判定</option>
+          </select>
         </div>
+        <div class="listFilter-row">
+          <select id="filterVenue" class="listFilter-select">
+            <option value="">会場: すべて</option>
+          </select>
+          <select id="filterTeam" class="listFilter-select">
+            <option value="">チーム: すべて</option>
+          </select>
+        </div>
+      </div>
+      <div id="list" class="list"></div>
+      <div id="empty" class="empty hide">
+        一致する試合が見つかりません
       </div>
     </div>
   </section>
@@ -78,8 +95,8 @@
 
         <!-- ===== 基本入力（quickFieldRow スタイル） ===== -->
         <div class="quickFieldRow">
-          <span class="quickFieldLabel">試合日・時間</span>
-          <input id="f_dateTime" type="datetime-local" />
+          <span class="quickFieldLabel">観戦日（年月）</span>
+          <input id="f_dateTime" type="month" />
         </div>
         <div class="quickFieldRow">
           <span class="quickFieldLabel">リーグ</span>

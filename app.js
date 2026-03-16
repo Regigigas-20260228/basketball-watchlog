@@ -25,15 +25,10 @@ function uid() {
 
 function fmtDateTime(iso) {
   if (!iso) return "";
-  // Date-only: YYYY-MM-DD — display without time
-  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    const [y, m, d] = iso.split("-");
-    return `${y}/${m}/${d}`;
-  }
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const pad = (n)=> String(n).padStart(2,"0");
-  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  // YYYY-MM または YYYY-MM-DD... → 年月のみ表示
+  const m = iso.match(/^(\d{4})-(\d{2})/);
+  if (m) return `${m[1]}/${m[2]}`;
+  return iso;
 }
 
 function computeResult(finalHome, finalAway, homeTeam, awayTeam) {
@@ -59,6 +54,10 @@ const listEl = document.getElementById("list");
 const emptyEl = document.getElementById("empty");
 const countPill = document.getElementById("countPill");
 const qEl = document.getElementById("q");
+const listSortEl     = document.getElementById("listSort");
+const filterResultEl = document.getElementById("filterResult");
+const filterVenueEl  = document.getElementById("filterVenue");
+const filterTeamEl   = document.getElementById("filterTeam");
 
 const detailBody = document.getElementById("detailBody");
 
@@ -146,7 +145,7 @@ document.getElementById("btnQuickCancelFooter").addEventListener("click", () => 
 document.getElementById("btnQuickSave").addEventListener("click", () => onQuickSave().catch(console.error));
 
 // buttons
-document.getElementById("btnBack").addEventListener("click", () => show("list"));
+document.getElementById("btnBack").addEventListener("click", () => show("home"));
 document.getElementById("btnCancel").addEventListener("click", () => show("list"));
 document.getElementById("btnSave").addEventListener("click", () => onSave().catch(console.error));
 document.getElementById("btnEdit").addEventListener("click", () => openFormForEdit(currentId));
@@ -171,9 +170,17 @@ btnStartAnonymous.addEventListener("click", onStartAnonymous);
 
 document.getElementById("btnClearQ").addEventListener("click", () => {
   qEl.value = "";
+  listSortEl.value     = "desc";
+  filterResultEl.value = "";
+  filterVenueEl.value  = "";
+  filterTeamEl.value   = "";
   renderList();
 });
 qEl.addEventListener("input", renderList);
+listSortEl.addEventListener("change", renderList);
+filterResultEl.addEventListener("change", renderList);
+filterVenueEl.addEventListener("change", renderList);
+filterTeamEl.addEventListener("change", renderList);
 
 function updateFResult() {
   f_result.value = computeResult(f_finalHome.value, f_finalAway.value, f_homeTeam.value, f_awayTeam.value);
@@ -228,6 +235,7 @@ async function refreshRecords() {
     records = loadRecords();
   }
   renderList();
+  renderHome();
 }
 
 function recordToRow(rec, userId) {
@@ -280,6 +288,9 @@ async function getSupabaseUser() {
 // ===== State =====
 let records = [];
 let currentId = null;
+// 応援側ラジオの手動変更フラグ（自動選択による上書きを防ぐ）
+let qfSupportedSideManuallySet = false;
+let fSupportedSideManuallySet  = false;
 
 // ===== Routing-ish =====
 function show(which){
@@ -462,8 +473,9 @@ function getUniqueTeams(records) {
  * @param {string[]} values
  * @param {HTMLInputElement} inputEl
  * @param {HTMLElement|null} [nextEl] チップタップ後にフォーカスする次の要素
+ * @param {Function|null} [onSelect] チップ選択後に明示的に呼ぶコールバック
  */
-function renderSuggestions(containerId, values, inputEl, nextEl) {
+function renderSuggestions(containerId, values, inputEl, nextEl, onSelect) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = "";
@@ -474,7 +486,7 @@ function renderSuggestions(containerId, values, inputEl, nextEl) {
     chip.textContent = val;
     chip.addEventListener("click", () => {
       inputEl.value = val;
-      inputEl.dispatchEvent(new Event("input"));
+      if (onSelect) onSelect();
       if (nextEl) setTimeout(() => nextEl.focus(), 40);
     });
     container.appendChild(chip);
@@ -547,10 +559,9 @@ function resetQfdSection() {
 
 // ===== Quick Form =====
 function openQuickFormForNew() {
-  // 今日の日付を YYYY-MM-DD 形式で自動入力
+  // 今月を YYYY-MM 形式で自動入力
   const now = new Date();
-  const pad = n => String(n).padStart(2, "0");
-  qf_dateTime.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  qf_dateTime.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, "0")}`;
 
   qf_league.value    = "";
   qf_homeTeam.value  = "";
@@ -562,12 +573,13 @@ function openQuickFormForNew() {
 
   // 過去入力から候補を初期描画
   renderSuggestions("sug_league",   getUniqueLeagues(records), qf_league,   qf_homeTeam);
-  renderSuggestions("sug_homeTeam", getUniqueTeams(records),   qf_homeTeam, qf_awayTeam);
-  renderSuggestions("sug_awayTeam", getUniqueTeams(records),   qf_awayTeam, qf_finalHome);
+  renderSuggestions("sug_homeTeam", getUniqueTeams(records),   qf_homeTeam, qf_awayTeam,   updateQfSupportedSide);
+  renderSuggestions("sug_awayTeam", getUniqueTeams(records),   qf_awayTeam, qf_finalHome,  updateQfSupportedSide);
   renderSuggestions("sug_venue",    getUniqueVenues(records),  qf_venue,    qf_memo);
 
-  // 応援側: favoriteTeamName と照合して初期選択（空なら未選択）
-  setQfSupportedSide(detectSupportedSide("", ""));
+  // 応援側: フラグをリセット（チーム名入力後に自動選択が働くようにする）
+  qfSupportedSideManuallySet = false;
+  setQfSupportedSide("");
 
   // 詳細セクションをリセット・折りたたむ
   resetQfdSection();
@@ -679,8 +691,8 @@ function openFormForEdit(id){
   fillForm(rec);
   // 過去入力候補を初期描画
   renderSuggestions("sug_f_league",   getUniqueLeagues(records), f_league,   f_homeTeam);
-  renderSuggestions("sug_f_homeTeam", getUniqueTeams(records),   f_homeTeam, f_awayTeam);
-  renderSuggestions("sug_f_awayTeam", getUniqueTeams(records),   f_awayTeam, null);
+  renderSuggestions("sug_f_homeTeam", getUniqueTeams(records),   f_homeTeam, f_awayTeam, updateFSupportedSide);
+  renderSuggestions("sug_f_awayTeam", getUniqueTeams(records),   f_awayTeam, null,       updateFSupportedSide);
   renderSuggestions("sug_f_venue",    getUniqueVenues(records),  f_venue,    null);
   show("form");
 }
@@ -703,6 +715,7 @@ function clearForm(){
   f_cheer.value = "";
   f_note.value = "";
   setFSupportedSide("");
+  fSupportedSideManuallySet = false;
   resetQuarters();
   resetPlayers();
 
@@ -711,7 +724,10 @@ function clearForm(){
 }
 
 function fillForm(rec){
-  f_dateTime.value = rec.dateTime || "";
+  // type="month" には YYYY-MM が必要。既存データが YYYY-MM-DD 以上の場合は切り詰め
+  const dtRaw = rec.dateTime || "";
+  const dtMonth = dtRaw.match(/^(\d{4}-\d{2})/) ? dtRaw.slice(0, 7) : "";
+  f_dateTime.value = dtMonth;
   f_league.value = rec.league || "";
   f_homeTeam.value = rec.homeTeam || "";
   f_awayTeam.value = rec.awayTeam || "";
@@ -739,8 +755,9 @@ function fillForm(rec){
   f_cheer.value = rec.cheer || "";
   f_note.value = rec.note || "";
 
-  // 応援していた側
+  // 応援していた側（既存データを尊重し、以降の自動上書きを抑制）
   setFSupportedSide(rec.supportedSide || "");
+  fSupportedSideManuallySet = true;
 }
 
 async function onSave(){
@@ -881,7 +898,46 @@ async function onDelete(id){
 
   await refreshRecords();
   currentId = null;
-  show("list");
+  show("home");
+}
+
+// ===== Numeric input helpers =====
+
+/** 全角数字を半角に変換し、数字以外を除去する */
+function normalizeNumericInput(el) {
+  el.addEventListener("input", () => {
+    const normalized = el.value
+      .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFF10 + 0x30))
+      .replace(/[^0-9]/g, "");
+    if (normalized !== el.value) el.value = normalized;
+  });
+}
+
+// ===== List helpers =====
+
+/** スコアと応援サイドから結果カテゴリを返す: "win" | "loss" | "draw" | "" */
+function getResultCategory(r) {
+  const h = r.finalHome != null ? Number(r.finalHome) : null;
+  const a = r.finalAway != null ? Number(r.finalAway) : null;
+  if (h === null || a === null || isNaN(h) || isNaN(a)) return "";
+  if (h === a) return "draw";
+  const homeWins = h > a;
+  if (r.supportedSide === "home") return homeWins ? "win" : "loss";
+  if (r.supportedSide === "away") return homeWins ? "loss" : "win";
+  return "undecided"; // 応援側未設定 → 勝敗未判定
+}
+
+/** select の options を動的に更新（現在値を保持） */
+function populateFilterOptions(selectEl, values, placeholder) {
+  const current = selectEl.value;
+  selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+  values.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    if (v === current) opt.selected = true;
+    selectEl.appendChild(opt);
+  });
 }
 
 // ===== Stats helpers =====
@@ -1188,8 +1244,9 @@ function renderHome() {
       </div>
     </div>`;
 
-  // ── 最近の記録 ───────────────────────────────────────────────
-  const recentRecs = getRecentRecords(records, 3);
+  // ── 最近の記録（ヒーロー除く直近2〜3件） ──────────────────────
+  // ヒーローに最新1件を表示しているため、リストは2番目以降を最大3件表示する
+  const recentRecs = latest ? getRecentRecords(records, 4).slice(1) : [];
   const recentItemsHtml = recentRecs.map(r => {
     const matchup = `${r.homeTeam || "HOME"} vs ${r.awayTeam || "AWAY"}`;
     const score   = r.finalHome != null && r.finalAway != null ? `${r.finalHome}–${r.finalAway}` : "—";
@@ -1201,7 +1258,7 @@ function renderHome() {
       </div>`;
   }).join("");
 
-  const recentHtml = records.length === 0 ? "" : `
+  const recentHtml = recentRecs.length === 0 ? "" : `
     <div class="card" style="padding:0">
       <div class="sectionCard__header">
         <span class="homeSectionHd-title">最近の記録</span>
@@ -1280,14 +1337,34 @@ function renderHome() {
 
 // ===== Render list/detail =====
 function renderList(){
-  const q = (qEl.value || "").trim().toLowerCase();
-  const filtered = records.filter(r => {
-    if (!q) return true;
-    const blob = [
-      r.league, r.homeTeam, r.awayTeam, r.venue, r.seat,
-      r.flow, r.play, r.mvp, r.food, r.event, r.cheer, r.note
-    ].join(" ").toLowerCase();
-    return blob.includes(q);
+  // フィルター用ドロップダウンを最新データで更新（現在値を保持）
+  populateFilterOptions(filterVenueEl, getUniqueVenues(records), "会場: すべて");
+  populateFilterOptions(filterTeamEl,  getUniqueTeams(records),  "チーム: すべて");
+
+  const q       = (qEl.value || "").trim().toLowerCase();
+  const sortDir = listSortEl.value;        // "desc" | "asc"
+  const fResult = filterResultEl.value;   // "" | "win" | "loss" | "draw"
+  const fVenue  = filterVenueEl.value;    // "" | venue string
+  const fTeam   = filterTeamEl.value;     // "" | team string
+
+  let filtered = records.filter(r => {
+    if (q) {
+      const blob = [
+        r.league, r.homeTeam, r.awayTeam, r.venue, r.seat,
+        r.flow, r.play, r.mvp, r.food, r.event, r.cheer, r.note
+      ].join(" ").toLowerCase();
+      if (!blob.includes(q)) return false;
+    }
+    if (fResult && getResultCategory(r) !== fResult) return false;
+    if (fVenue  && r.venue    !== fVenue) return false;
+    if (fTeam   && r.homeTeam !== fTeam && r.awayTeam !== fTeam) return false;
+    return true;
+  });
+
+  filtered.sort((a, b) => {
+    const da = a.dateTime || a.updatedAt || "";
+    const db = b.dateTime || b.updatedAt || "";
+    return sortDir === "asc" ? da.localeCompare(db) : db.localeCompare(da);
   });
 
   countPill.textContent = `${filtered.length}件`;
@@ -1301,8 +1378,8 @@ function renderList(){
     const venue = r.venue || "会場未設定";
     const league = r.league || "リーグ未設定";
 
-    const dotClass = (r.finalHome == null || r.finalAway == null) ? "draw"
-      : (r.finalHome > r.finalAway ? "win" : (r.finalHome < r.finalAway ? "lose" : "draw"));
+    const resultCat = getResultCategory(r);
+    const dotClass  = resultCat === "win" ? "win" : resultCat === "loss" ? "lose" : "draw";
 
     const card = document.createElement("div");
     card.className = "card";
@@ -1317,7 +1394,7 @@ function renderList(){
       </div>
       <div class="bd">
         <div class="tag"><span class="dot" style="opacity:.35"></span><span>${esc(venue)}</span></div>
-        ${r.mvp ? `<div class="small" style="margin-top:8px">MVP: ${esc(r.mvp)}</div>` : `<div class="small" style="margin-top:8px">メモ: 未入力</div>`}
+        ${r.mvp ? `<div class="small" style="margin-top:8px">MVP: ${esc(r.mvp)}</div>` : ""}
       </div>
     `;
     card.addEventListener("click", () => openDetail(r.id));
@@ -2010,6 +2087,8 @@ function initQuickFieldNav() {
   fields.forEach((el, i) => {
     el.addEventListener("keydown", e => {
       if (e.key !== "Enter") return;
+      // IME 変換確定中は移動しない（日本語入力でのEnter誤移動を防ぐ）
+      if (e.isComposing) return;
       e.preventDefault();
       const next = fields[i + 1];
       if (next) next.focus();
@@ -2030,26 +2109,47 @@ function initFavoriteTeam() {
   });
 }
 
-/** チーム名変更時に応援側を自動再評価する */
+/** クイック記録フォーム: 手動変更済みでなければ応援側を再判定してセット */
+function updateQfSupportedSide() {
+  if (qfSupportedSideManuallySet) return;
+  const side = detectSupportedSide(qf_homeTeam.value.trim(), qf_awayTeam.value.trim());
+  setQfSupportedSide(side);
+}
+
+/** 編集フォーム: 手動変更済みでなければ応援側を再判定してセット */
+function updateFSupportedSide() {
+  if (fSupportedSideManuallySet) return;
+  const side = detectSupportedSide(f_homeTeam.value.trim(), f_awayTeam.value.trim());
+  setFSupportedSide(side);
+}
+
+/** チーム名変更時に応援側を自動再評価する（イベント登録） */
 function initSupportedSideAutoDetect() {
-  // クイック記録フォーム
-  const updateQf = () => {
-    const side = detectSupportedSide(qf_homeTeam.value.trim(), qf_awayTeam.value.trim());
-    if (side) setQfSupportedSide(side);
-  };
-  qf_homeTeam.addEventListener("change", updateQf);
-  qf_awayTeam.addEventListener("change", updateQf);
-  // 編集フォーム（未選択のときだけ自動入力）
-  const updateF = () => {
-    if (getFSupportedSide() !== "") return;
-    const side = detectSupportedSide(f_homeTeam.value.trim(), f_awayTeam.value.trim());
-    if (side) setFSupportedSide(side);
-  };
-  f_homeTeam.addEventListener("change", updateF);
-  f_awayTeam.addEventListener("change", updateF);
+  // change（フォーカスアウト）と input（チップ選択 dispatch 含む）両方を拾う
+  qf_homeTeam.addEventListener("change", updateQfSupportedSide);
+  qf_homeTeam.addEventListener("input",  updateQfSupportedSide);
+  qf_awayTeam.addEventListener("change", updateQfSupportedSide);
+  qf_awayTeam.addEventListener("input",  updateQfSupportedSide);
+
+  // 手動変更を検知してフラグを立てる
+  document.querySelectorAll('input[name="qf_supportedSide"]').forEach(r => {
+    r.addEventListener("change", () => { qfSupportedSideManuallySet = true; });
+  });
+
+  f_homeTeam.addEventListener("change", updateFSupportedSide);
+  f_homeTeam.addEventListener("input",  updateFSupportedSide);
+  f_awayTeam.addEventListener("change", updateFSupportedSide);
+  f_awayTeam.addEventListener("input",  updateFSupportedSide);
+
+  document.querySelectorAll('input[name="f_supportedSide"]').forEach(r => {
+    r.addEventListener("change", () => { fSupportedSideManuallySet = true; });
+  });
 }
 
 // ===== Init =====
+// 数字入力欄の半角正規化
+[qf_finalHome, qf_finalAway, f_finalHome, f_finalAway].forEach(normalizeNumericInput);
+
 initTheme();
 show("home");
 initAuth();
