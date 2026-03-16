@@ -163,15 +163,6 @@ input:focus, select:focus, textarea:focus{border-color: var(--team-primary); box
   flex: 0 0 auto;
 }
 .hr{height:1px; background: var(--border); margin:14px 0}
-.kvs{display:grid; gap:10px}
-.kv{
-  border:1px solid var(--border);
-  border-radius: 14px;
-  padding:12px;
-  background: var(--surface-2);
-}
-.kv .k{color:var(--text-muted); font-size:12px}
-.kv .v{margin-top:6px; font-size:14px; white-space:pre-wrap}
 .table{
   width:100%;
   border-collapse: separate;

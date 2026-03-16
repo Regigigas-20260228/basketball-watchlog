@@ -2,9 +2,6 @@ const SUPABASE_URL = "https://qeflnlfgumsyfkgrhzgb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_m01uu29KPm9SNGpqEFZ9_g_B_jBwNP_";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-console.log("window.supabase exists?", !!window.supabase);
-console.log("Supabase client initialized", !!supabaseClient);
-
 // ===== Storage =====
 const STORAGE_KEY = "bb_watchlog_v1";
 
@@ -102,6 +99,14 @@ const playersBody = document.getElementById("playersBody");
 const quartersContent = document.getElementById("quartersContent");
 const quartersAddArea = document.getElementById("quartersAddArea");
 
+// qfd (クイックフォーム詳細) refs
+const qfdDetailEl  = document.getElementById("qfdDetail");
+const qfdToggleBtn = document.getElementById("btnQfdToggle");
+const qfdQContent  = document.getElementById("qfd_quartersContent");
+const qfdQAddArea  = document.getElementById("qfd_quartersAddArea");
+const qfdQBody     = document.getElementById("qfd_quartersBody");
+const qfdPBody     = document.getElementById("qfd_playersBody");
+
 // bottom dock (入力モード中は非表示)
 const bottomDock = document.getElementById("bottomDock");
 
@@ -170,18 +175,10 @@ document.getElementById("btnClearQ").addEventListener("click", () => {
 });
 qEl.addEventListener("input", renderList);
 
-f_finalHome.addEventListener("input", () => {
+function updateFResult() {
   f_result.value = computeResult(f_finalHome.value, f_finalAway.value, f_homeTeam.value, f_awayTeam.value);
-});
-f_finalAway.addEventListener("input", () => {
-  f_result.value = computeResult(f_finalHome.value, f_finalAway.value, f_homeTeam.value, f_awayTeam.value);
-});
-f_homeTeam.addEventListener("input", () => {
-  f_result.value = computeResult(f_finalHome.value, f_finalAway.value, f_homeTeam.value, f_awayTeam.value);
-});
-f_awayTeam.addEventListener("input", () => {
-  f_result.value = computeResult(f_finalHome.value, f_finalAway.value, f_homeTeam.value, f_awayTeam.value);
-});
+}
+[f_finalHome, f_finalAway, f_homeTeam, f_awayTeam].forEach(el => el.addEventListener("input", updateFResult));
 
 // ===== Supabase read =====
 function rowToRecord(row) {
@@ -212,8 +209,7 @@ function rowToRecord(row) {
 }
 
 async function loadRecordsFromSupabase() {
-  const { data: userData } = await supabaseClient.auth.getUser();
-  const user = userData.user;
+  const user = await getSupabaseUser();
   if (!user) return null;
   const { data, error } = await supabaseClient
     .from("watch_logs")
@@ -261,8 +257,7 @@ function recordToRow(rec, userId) {
 }
 
 async function saveRecordToSupabase(rec) {
-  const { data: userData } = await supabaseClient.auth.getUser();
-  const user = userData.user;
+  const user = await getSupabaseUser();
   if (!user) return null;
   const row = recordToRow(rec, user.id);
   let query;
@@ -274,6 +269,12 @@ async function saveRecordToSupabase(rec) {
   const { data, error } = await query;
   if (error) throw error;
   return rowToRecord(data);
+}
+
+/** Supabase の現在ユーザーを返す。未認証なら null */
+async function getSupabaseUser() {
+  const { data } = await supabaseClient.auth.getUser();
+  return data.user;
 }
 
 // ===== State =====
@@ -425,9 +426,9 @@ function fillPlayers(ps){
  * 将来フィルタ機能にも流用しやすいよう汎用化
  * @param {Array} records @param {string} key @returns {string[]}
  */
-function getUniqueFieldValues(records, key) {
+function getUniqueFieldValues(recs, key) {
   const seen = new Set();
-  return records
+  return recs
     .map(r => (r[key] || "").trim())
     .filter(v => v && !seen.has(v) && seen.add(v));
 }
@@ -499,17 +500,11 @@ function initSuggestionFilters() {
 
 /** 詳細トグル・クオーター・選手ボタンの初期化（クイック記録フォーム用） */
 function initQfdDetail() {
-  const toggle    = document.getElementById("btnQfdToggle");
-  const detailEl  = document.getElementById("qfdDetail");
-  toggle.addEventListener("click", () => {
-    const nowOpen = detailEl.classList.contains("hide");
-    detailEl.classList.toggle("hide", !nowOpen);
-    toggle.textContent = nowOpen ? "－ 詳細入力を閉じる" : "＋ 詳細に記録する";
+  qfdToggleBtn.addEventListener("click", () => {
+    const nowOpen = qfdDetailEl.classList.contains("hide");
+    qfdDetailEl.classList.toggle("hide", !nowOpen);
+    qfdToggleBtn.textContent = nowOpen ? "－ 詳細入力を閉じる" : "＋ 詳細に記録する";
   });
-
-  const qfdQContent = document.getElementById("qfd_quartersContent");
-  const qfdQAddArea = document.getElementById("qfd_quartersAddArea");
-  const qfdQBody    = document.getElementById("qfd_quartersBody");
 
   document.getElementById("btnQfdShowQuarters").addEventListener("click", () => {
     qfdQAddArea.classList.add("hide");
@@ -526,7 +521,23 @@ function initQfdDetail() {
     addQuarterRowTo(qfdQBody, "OT" + (n + 1));
   });
   document.getElementById("btnQfdAddPlayer").addEventListener("click", () => {
-    addPlayerRowTo(document.getElementById("qfd_playersBody"));
+    addPlayerRowTo(qfdPBody);
+  });
+}
+
+/** クイックフォーム詳細セクションを初期状態に戻す */
+function resetQfdSection() {
+  qfdDetailEl.classList.add("hide");
+  qfdToggleBtn.textContent = "＋ 詳細に記録する";
+  qfdQContent.classList.add("hide");
+  qfdQAddArea.classList.remove("hide");
+  qfdQBody.innerHTML = "";
+  ["Q1","Q2","Q3","Q4"].forEach(q => addQuarterRowTo(qfdQBody, q));
+  qfdPBody.innerHTML = "";
+  addPlayerRowTo(qfdPBody);
+  ["qfd_seat","qfd_flow","qfd_play","qfd_mvp","qfd_food","qfd_event","qfd_cheer"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
   });
 }
 
@@ -555,46 +566,15 @@ function openQuickFormForNew() {
   setQfSupportedSide(detectSupportedSide("", ""));
 
   // 詳細セクションをリセット・折りたたむ
-  const qfdDetailEl = document.getElementById("qfdDetail");
-  const qfdToggleBtn = document.getElementById("btnQfdToggle");
-  if (qfdDetailEl) qfdDetailEl.classList.add("hide");
-  if (qfdToggleBtn) qfdToggleBtn.textContent = "＋ 詳細に記録する";
-  const qfdQContent = document.getElementById("qfd_quartersContent");
-  const qfdQAddArea = document.getElementById("qfd_quartersAddArea");
-  if (qfdQContent) qfdQContent.classList.add("hide");
-  if (qfdQAddArea) qfdQAddArea.classList.remove("hide");
-  const qfdQBody = document.getElementById("qfd_quartersBody");
-  if (qfdQBody) {
-    qfdQBody.innerHTML = "";
-    ["Q1","Q2","Q3","Q4"].forEach(q => addQuarterRowTo(qfdQBody, q));
-  }
-  const qfdPBody = document.getElementById("qfd_playersBody");
-  if (qfdPBody) {
-    qfdPBody.innerHTML = "";
-    addPlayerRowTo(qfdPBody);
-  }
-  ["qfd_seat","qfd_flow","qfd_play","qfd_mvp","qfd_food","qfd_event","qfd_cheer"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
+  resetQfdSection();
 
   show("quickForm");
   // 最初のフォーカスはホームチーム（日付ではない）
   setTimeout(() => qf_homeTeam.focus(), 80);
 }
 
-/** クイックフォームの応援側ラジオを設定する */
-function setQfSupportedSide(value) {
-  document.querySelectorAll('input[name="qf_supportedSide"]').forEach(el => {
-    el.checked = (el.value === value);
-  });
-}
-
-/** クイックフォームの応援側ラジオ値を読む */
-function getQfSupportedSide() {
-  const checked = document.querySelector('input[name="qf_supportedSide"]:checked');
-  return checked ? checked.value : "";
-}
+const setQfSupportedSide = (v) => setRadioValue("qf_supportedSide", v);
+const getQfSupportedSide = ()  => getRadioValue("qf_supportedSide");
 
 function readQuickForm() {
   const finalHome = qf_finalHome.value === "" ? null : Number(qf_finalHome.value);
@@ -650,8 +630,7 @@ async function onQuickSave() {
   }
 
   const rec = readQuickForm();
-  const { data: userData } = await supabaseClient.auth.getUser();
-  const user = userData.user;
+  const user = await getSupabaseUser();
 
   if (user) {
     try {
@@ -668,11 +647,16 @@ async function onQuickSave() {
     rec.createdAt = new Date().toISOString();
     rec.updatedAt = rec.createdAt;
     records.unshift(rec);
-    records.sort((a,b) => (b.dateTime || b.updatedAt || "").localeCompare(a.dateTime || a.updatedAt || ""));
+    sortByDateTime(records);
     saveRecords(records);
     currentId = rec.id;
     openDetail(rec.id);
   }
+}
+
+/** dateTime → updatedAt フォールバックで降順ソート（破壊的） */
+function sortByDateTime(arr) {
+  arr.sort((a, b) => (b.dateTime || b.updatedAt || "").localeCompare(a.dateTime || a.updatedAt || ""));
 }
 
 // ===== CRUD =====
@@ -766,8 +750,7 @@ async function onSave(){
     alert("最低でも「日付 or リーグ or チーム名」を入れるのがおすすめ！");
   }
 
-  const { data: userData } = await supabaseClient.auth.getUser();
-  const user = userData.user;
+  const user = await getSupabaseUser();
 
   if (user) {
     // ===== Supabase 保存 =====
@@ -798,7 +781,7 @@ async function onSave(){
     }
 
     // sort: dateTime desc if available, else updatedAt desc
-    records.sort((a,b) => (b.dateTime || b.updatedAt || "").localeCompare(a.dateTime || a.updatedAt || ""));
+    sortByDateTime(records);
 
     saveRecords(records);
     currentId = rec.id;
@@ -806,17 +789,18 @@ async function onSave(){
   }
 }
 
-/** 編集フォームの応援側ラジオ値を読む */
-function getFSupportedSide() {
-  const checked = document.querySelector('input[name="f_supportedSide"]:checked');
-  return checked ? checked.value : "";
+/** ラジオグループの選択値を読む */
+function getRadioValue(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : "";
 }
-/** 編集フォームの応援側ラジオを設定する */
-function setFSupportedSide(value) {
-  document.querySelectorAll('input[name="f_supportedSide"]').forEach(el => {
-    el.checked = (el.value === value);
-  });
+/** ラジオグループに値をセットする */
+function setRadioValue(name, value) {
+  document.querySelectorAll(`input[name="${name}"]`).forEach(el => { el.checked = el.value === value; });
 }
+
+const getFSupportedSide  = () => getRadioValue("f_supportedSide");
+const setFSupportedSide  = (v) => setRadioValue("f_supportedSide", v);
 
 function readForm(){
   const finalHome = f_finalHome.value === "" ? null : Number(f_finalHome.value);
@@ -864,8 +848,7 @@ function readForm(){
 }
 
 async function deleteRecordFromSupabase(id) {
-  const { data: userData } = await supabaseClient.auth.getUser();
-  const user = userData.user;
+  const user = await getSupabaseUser();
   if (!user) return false;
   const { error } = await supabaseClient.from("watch_logs").delete().eq("id", id).eq("user_id", user.id);
   if (error) throw error;
@@ -877,8 +860,7 @@ async function onDelete(id){
   if (!rec) return;
   if (!confirm("この記録を削除しますか？")) return;
 
-  const { data: userData } = await supabaseClient.auth.getUser();
-  const user = userData.user;
+  const user = await getSupabaseUser();
 
   try {
     if (user) {
@@ -1342,7 +1324,7 @@ function importJSON(){
           map.set(r.id, r);
         });
         records = [...map.values()];
-        records.sort((a,b) => (b.dateTime || b.updatedAt || "").localeCompare(a.dateTime || a.updatedAt || ""));
+        sortByDateTime(records);
         saveRecords(records);
         show("list");
         alert("インポートしました！");
@@ -1372,10 +1354,7 @@ function isAnonymousUser(user) {
 }
 
 async function onStartAnonymous() {
-  const { data, error } = await supabaseClient.auth.signInAnonymously();
-
-  console.log("anonymous sign-in data:", data);
-  console.log("anonymous sign-in error:", error);
+  const { error } = await supabaseClient.auth.signInAnonymously();
 
   if (error) {
     alert(`登録なしの開始に失敗しました: ${error.message}`);
@@ -1429,8 +1408,7 @@ async function onLogin() {
   const email = authEmail.value.trim();
   if (!email) { alert("メールアドレスを入力してください。"); return; }
 
-  const { data: userData } = await supabaseClient.auth.getUser();
-  const user = userData.user;
+  const user = await getSupabaseUser();
 
   if (isAnonymousUser(user)) {
     // 匿名ユーザー → メールで引き継ぎ
