@@ -50,6 +50,7 @@ const viewList = document.getElementById("viewList");
 const viewDetail = document.getElementById("viewDetail");
 const viewForm = document.getElementById("viewForm");
 const viewQuickForm = document.getElementById("viewQuickForm");
+const viewHome = document.getElementById("viewHome");
 const viewBest = document.getElementById("viewBest");
 const viewStats = document.getElementById("viewStats");
 const viewAccount = document.getElementById("viewAccount");
@@ -126,8 +127,8 @@ function setNavActive(navId) {
 }
 
 document.getElementById("btnPrimaryRecord").addEventListener("click", () => openQuickFormForNew());
-document.getElementById("btnNavList").addEventListener("click", () => {
-  show("list"); setNavActive("btnNavList");
+document.getElementById("btnNavHome").addEventListener("click", () => {
+  show("home"); setNavActive("btnNavHome");
 });
 document.getElementById("btnNavBest").addEventListener("click", () => {
   show("best"); setNavActive("btnNavBest");
@@ -282,6 +283,7 @@ let currentId = null;
 
 // ===== Routing-ish =====
 function show(which){
+  viewHome.classList.toggle("hide", which !== "home");
   viewList.classList.toggle("hide", which !== "list");
   viewDetail.classList.toggle("hide", which !== "detail");
   viewForm.classList.toggle("hide", which !== "form");
@@ -289,6 +291,7 @@ function show(which){
   viewBest.classList.toggle("hide", which !== "best");
   viewStats.classList.toggle("hide", which !== "stats");
   viewAccount.classList.toggle("hide", which !== "account");
+  if (which === "home")  renderHome();
   if (which === "list")  renderList();
   if (which === "stats") renderStats();
 
@@ -296,8 +299,8 @@ function show(which){
   const inputModes = ["form", "quickForm"];
   bottomDock.classList.toggle("hide", inputModes.includes(which));
 
-  // detail は「試合一覧」配下として扱う
-  const navMap = { list: "btnNavList", detail: "btnNavList", best: "btnNavBest", stats: "btnNavReview", account: "btnNavAccount" };
+  // list・detail はホーム配下のサブ画面として扱う
+  const navMap = { home: "btnNavHome", list: "btnNavHome", detail: "btnNavHome", best: "btnNavBest", stats: "btnNavReview", account: "btnNavAccount" };
   setNavActive(navMap[which] || null);
 }
 
@@ -1085,6 +1088,196 @@ function renderStats() {
   });
 }
 
+// ===== Home helpers =====
+
+/** 直近の観戦傾向を人に読めるテキストで最大2件返す */
+function buildHighlights(recs) {
+  if (!recs.length) return [];
+  const items = [];
+
+  // 直近の応援試合の勝敗
+  const recentSupported = getRecentRecords(recs, 5)
+    .filter(r => (r.supportedSide === "home" || r.supportedSide === "away") && r.finalHome != null && r.finalAway != null);
+  if (recentSupported.length >= 2) {
+    let wins = 0, losses = 0;
+    recentSupported.forEach(r => {
+      const mine = r.supportedSide === "home" ? r.finalHome : r.finalAway;
+      const opp  = r.supportedSide === "home" ? r.finalAway : r.finalHome;
+      if (mine > opp) wins++;
+      else if (mine < opp) losses++;
+    });
+    const n = wins + losses;
+    if (n > 0) items.push(`直近 ${n} 試合で ${wins} 勝 ${losses} 敗`);
+  }
+
+  // 最もよく行った会場
+  const top = getTopVenues(recs, 1);
+  if (top.length) items.push(`よく行った会場：${top[0].name}（${top[0].count} 回）`);
+
+  return items.slice(0, 2);
+}
+
+// ===== Home render =====
+
+function renderHome() {
+  const body = document.getElementById("homeBody");
+  if (!body) return;
+
+  const latest = getRecentRecords(records, 1)[0] || null;
+
+  // ── Hero card ──────────────────────────────────────────────
+  let heroHtml;
+  if (!latest) {
+    heroHtml = `
+      <div class="card homeHero emptyHeroCard">
+        <div class="homeHero-emptyTitle">まだ観戦記録がありません</div>
+        <div class="homeHero-emptySub">最初の1試合を記録してみましょう</div>
+        <button class="btn primary primaryButton" id="btnHomeRecord">＋ 記録する</button>
+      </div>`;
+  } else {
+    const homeTeam = latest.homeTeam || "HOME";
+    const awayTeam = latest.awayTeam || "AWAY";
+    const hasScore = latest.finalHome != null && latest.finalAway != null;
+    const score    = hasScore ? `${latest.finalHome} - ${latest.finalAway}` : "—";
+    const dt       = fmtDateTime(latest.dateTime) || "日付未設定";
+    const meta     = [dt, latest.league].filter(Boolean).join(" · ");
+    heroHtml = `
+      <div class="card homeHero">
+        <div class="homeHero-meta">${esc(meta)}</div>
+        <div class="homeHero-matchup">
+          <span class="homeHero-team">${esc(homeTeam)}</span>
+          <span class="homeHero-score">${esc(score)}</span>
+          <span class="homeHero-team homeHero-team--away">${esc(awayTeam)}</span>
+        </div>
+        ${latest.result ? `<div class="homeHero-result">${esc(latest.result)}</div>` : ""}
+        ${latest.venue ? `<div class="homeHero-venue">📍 ${esc(latest.venue)}</div>` : ""}
+        ${latest.note  ? `<div class="homeHero-memo">${esc(latest.note)}</div>` : ""}
+        <div class="homeHero-actions">
+          <button class="btn ghost homeHero-btn" data-action="edit"   data-id="${latest.id}">追記・編集</button>
+          <button class="btn primary homeHero-btn" data-action="detail" data-id="${latest.id}">詳細を見る</button>
+        </div>
+      </div>`;
+  }
+
+  // ── Summary 2×2 ────────────────────────────────────────────
+  const thisYear        = String(new Date().getFullYear());
+  const thisYearCount   = records.filter(r => r.dateTime && r.dateTime.startsWith(thisYear)).length;
+  const uniqueVenuesCnt = new Set(records.map(r => r.venue).filter(Boolean)).size;
+  const cheering        = getCheeringStats(records);
+  const winRateText     = cheering.winRate != null ? `${cheering.winRate}%` : "—";
+
+  const summaryHtml = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="homeSummaryGrid">
+        <div class="homeSummaryItem">
+          <span class="homeSummaryItem-val">${records.length}</span>
+          <span class="homeSummaryItem-label">通算観戦数</span>
+        </div>
+        <div class="homeSummaryItem">
+          <span class="homeSummaryItem-val">${thisYearCount}</span>
+          <span class="homeSummaryItem-label">${thisYear}年の観戦</span>
+        </div>
+        <div class="homeSummaryItem">
+          <span class="homeSummaryItem-val">${uniqueVenuesCnt}</span>
+          <span class="homeSummaryItem-label">行った会場数</span>
+        </div>
+        <div class="homeSummaryItem">
+          <span class="homeSummaryItem-val">${winRateText}</span>
+          <span class="homeSummaryItem-label">現地勝率</span>
+        </div>
+      </div>
+    </div>`;
+
+  // ── 最近の記録 ───────────────────────────────────────────────
+  const recentRecs = getRecentRecords(records, 3);
+  const recentItemsHtml = recentRecs.map(r => {
+    const matchup = `${r.homeTeam || "HOME"} vs ${r.awayTeam || "AWAY"}`;
+    const score   = r.finalHome != null && r.finalAway != null ? `${r.finalHome}–${r.finalAway}` : "—";
+    const dt      = fmtDateTime(r.dateTime) || "日付未設定";
+    return `
+      <div class="homeRecentItem" data-id="${r.id}">
+        <div class="homeRecentItem-main">${esc(matchup)}</div>
+        <div class="homeRecentItem-sub">${esc(dt)} · ${esc(score)}</div>
+      </div>`;
+  }).join("");
+
+  const recentHtml = records.length === 0 ? "" : `
+    <div class="card" style="padding:0">
+      <div class="sectionCard__header">
+        <span class="homeSectionHd-title">最近の記録</span>
+        <button class="homeSectionHd-more" id="btnHomeViewAll">すべて見る →</button>
+      </div>
+      <div class="sectionCard__body">
+        ${recentItemsHtml}
+      </div>
+    </div>`;
+
+  // ── マイベスト ────────────────────────────────────────────────
+  const bestHtml = `
+    <div class="card" style="padding:0">
+      <div class="sectionCard__header">
+        <span class="homeSectionHd-title">マイベスト</span>
+        <button class="homeSectionHd-more" id="btnHomeViewBest">もっと見る →</button>
+      </div>
+      <div class="sectionCard__body">
+        <div class="homeEmptyBlock">
+          <p class="homeEmptyBlock-note">まだマイベストがありません</p>
+          <button class="homeEmptyBlock-create" id="btnHomeBestCreate">最初のランキングを作る →</button>
+        </div>
+      </div>
+    </div>`;
+
+  // ── 振り返りハイライト ──────────────────────────────────────
+  const highlights = buildHighlights(records);
+  const highlightsHtml = highlights.length === 0 ? "" : `
+    <div class="card" style="padding:0">
+      <div class="sectionCard__header">
+        <span class="homeSectionHd-title">振り返りハイライト</span>
+        <button class="homeSectionHd-more" id="btnHomeViewStats">詳しく見る →</button>
+      </div>
+      <div class="sectionCard__body">
+        <div class="homeHighlightList">
+          ${highlights.map(h => `<div class="homeHighlightItem">${esc(h)}</div>`).join("")}
+        </div>
+      </div>
+    </div>`;
+
+  body.innerHTML = `
+    ${heroHtml}
+    ${summaryHtml}
+    ${recentHtml}
+    ${bestHtml}
+    ${highlightsHtml}
+  `;
+
+  // イベント配線
+  body.querySelectorAll(".homeRecentItem[data-id]").forEach(el => {
+    el.addEventListener("click", () => openDetail(el.dataset.id));
+  });
+  body.querySelectorAll(".homeHero-btn[data-action]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      if (btn.dataset.action === "detail") openDetail(btn.dataset.id);
+      else openFormForEdit(btn.dataset.id);
+    });
+  });
+
+  const btnRecord   = body.querySelector("#btnHomeRecord");
+  if (btnRecord)   btnRecord.addEventListener("click", () => openQuickFormForNew());
+
+  const btnViewAll  = body.querySelector("#btnHomeViewAll");
+  if (btnViewAll)  btnViewAll.addEventListener("click", () => show("list"));
+
+  const btnViewBest = body.querySelector("#btnHomeViewBest");
+  if (btnViewBest) btnViewBest.addEventListener("click", () => { show("best"); setNavActive("btnNavBest"); });
+
+  const btnBestCreate = body.querySelector("#btnHomeBestCreate");
+  if (btnBestCreate) btnBestCreate.addEventListener("click", () => { show("best"); setNavActive("btnNavBest"); });
+
+  const btnViewStats = body.querySelector("#btnHomeViewStats");
+  if (btnViewStats) btnViewStats.addEventListener("click", () => { show("stats"); setNavActive("btnNavReview"); });
+}
+
 // ===== Render list/detail =====
 function renderList(){
   const q = (qEl.value || "").trim().toLowerCase();
@@ -1858,7 +2051,7 @@ function initSupportedSideAutoDetect() {
 
 // ===== Init =====
 initTheme();
-show("list");
+show("home");
 initAuth();
 initSuggestionFilters();
 initQuickFieldNav();

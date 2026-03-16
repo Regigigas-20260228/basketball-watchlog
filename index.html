@@ -8,7 +8,7 @@
 </head>
 <body>
 <header>
-  <div class="topbar">
+  <div class="topbar appHeader">
     <div class="brand">
       <h1>🏀 Basketball Watch Log</h1>
       <small>登録なしですぐ使える観戦記録</small>
@@ -17,8 +17,13 @@
 </header>
 
 <main class="wrap">
+  <!-- HOME -->
+  <section id="viewHome">
+    <div id="homeBody" class="view-stack"></div>
+  </section>
+
   <!-- LIST -->
-  <section id="viewList">
+  <section id="viewList" class="hide">
     <div class="card">
       <div class="hd">
         <div class="title">
@@ -443,9 +448,9 @@
 <!-- ===== Bottom Dock ===== -->
 <div class="bottomDock" id="bottomDock">
   <nav class="bottomNav">
-    <button class="navItem active" id="btnNavList">
-      <span class="navIcon">☰</span>
-      <span>試合一覧</span>
+    <button class="navItem active" id="btnNavHome">
+      <span class="navIcon">🏠</span>
+      <span>ホーム</span>
     </button>
     <button class="navItem" id="btnNavBest">
       <span class="navIcon">★</span>
