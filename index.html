@@ -6,20 +6,45 @@
   <title>Basketball Watch Log</title>
   <style>
     :root{
-      --bg: #F7F2EE;
+      /* ===== Neutral base ===== */
+      --bg: #F5F5F3;
+      --bg-glass: rgba(245,245,243,.9);
       --surface: #FFFFFF;
-      --surface-2: #FAF4EF;
+      --surface-2: #F8F8F7;
       --text: #1F2937;
       --text-muted: #6B7280;
-      --border: #E7DDD6;
-      --accent: #F2A56E;
-      --accent-hover: #E8945A;
-      --accent-soft: #F8D6BF;
-      --on-accent: #FFFFFF;
+      --border: #E4E4E7;
+
+      /* ===== Team Primary — CTA / アクティブナビ / フォーカス ===== */
+      /* 仮色（ソフトオレンジ）。差し替えは applyTheme() を使ってください */
+      --team-primary: #E8945A;
+      --team-primary-hover: #D4834A;
+      --team-primary-soft: #FDDFC4;
+      --on-team-primary: #FFFFFF;
+      --team-primary-glow: rgba(232,148,90,.45);
+
+      /* ===== Team Secondary — 補助アクセント / バッジ / グラフ2色目 ===== */
+      /* 仮色（ソフトネイビー）。差し替えは applyTheme() を使ってください */
+      /* secondary が白系の場合、secondarySoft はニュートラルにし広い面には使わない */
+      --team-secondary: #4B72B0;
+      --team-secondary-soft: #D6E4F5;
+      --on-team-secondary: #FFFFFF;
+
+      /* ===== Team Tertiary — 補助色（任意。必要な場面のみ使う）===== */
+      /* tertiary を持たないテーマでは applyTheme() は上書きしない */
+      --team-tertiary: #6B7280;
+      --team-tertiary-soft: #F0F0F2;
+      --on-team-tertiary: #FFFFFF;
+
+      /* ===== Semantic fixed ===== */
       --success: #22C55E;
       --danger: #EF4444;
+      --danger-soft: #FEF2F2;
+
+      /* ===== Layout ===== */
+      --shadow: 0 2px 12px rgba(0,0,0,.07);
+      --shadow-lg: 0 4px 20px rgba(0,0,0,.1), 0 0 0 1px var(--border);
       --radius: 16px;
-      --shadow: 0 2px 12px rgba(31,41,55,.08);
       --w: 480px;
     }
     *{box-sizing:border-box}
@@ -33,7 +58,7 @@
     header{
       position:sticky; top:0; z-index:10;
       backdrop-filter: blur(10px);
-      background: rgba(247,242,238,.88);
+      background: var(--bg-glass);
       border-bottom: 1px solid var(--border);
     }
     .topbar{
@@ -60,13 +85,13 @@
     .btn:hover{background: var(--surface-2)}
     .btn:active{transform: translateY(1px)}
     .btn.primary{
-      background: var(--accent);
-      color: var(--on-accent);
+      background: var(--team-primary);
+      color: var(--on-team-primary);
       border-color: transparent;
     }
-    .btn.primary:hover{background: var(--accent-hover)}
+    .btn.primary:hover{background: var(--team-primary-hover)}
     .btn.danger{border-color: var(--danger); color: var(--danger)}
-    .btn.danger:hover{background: #fef2f2}
+    .btn.danger:hover{background: var(--danger-soft)}
     .btn.ghost{background: transparent; box-shadow:none; border-color: transparent}
     .btn.ghost:hover{background: var(--surface-2); border-color: var(--border)}
     .pill{
@@ -128,7 +153,7 @@
     }
     input::placeholder, textarea::placeholder{color: var(--text-muted)}
     textarea{min-height: 96px; resize: vertical}
-    input:focus, select:focus, textarea:focus{border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft)}
+    input:focus, select:focus, textarea:focus{border-color: var(--team-primary); box-shadow: 0 0 0 3px var(--team-primary-soft)}
     .sectionTitle{
       margin: 18px 0 10px;
       font-size: 13px;
@@ -140,8 +165,8 @@
     .sectionTitle:before{
       content:"";
       width:10px; height:10px; border-radius: 3px;
-      background: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-soft);
+      background: var(--team-primary);
+      box-shadow: 0 0 0 3px var(--team-primary-soft);
       flex: 0 0 auto;
     }
     .hr{height:1px; background: var(--border); margin:14px 0}
@@ -184,7 +209,7 @@
     }
     .search input{flex:1}
     .tag{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted)}
-    .dot{width:8px; height:8px; border-radius:999px; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft)}
+    .dot{width:8px; height:8px; border-radius:999px; background: var(--team-primary); box-shadow: 0 0 0 3px var(--team-primary-soft)}
     .dot.win{background: var(--success); box-shadow: 0 0 0 3px rgba(34,197,94,.18)}
     .dot.lose{background: var(--danger); box-shadow: 0 0 0 3px rgba(239,68,68,.14)}
     .dot.draw{background: var(--text-muted); box-shadow: 0 0 0 3px rgba(107,114,128,.14)}
@@ -210,7 +235,7 @@
       background: var(--surface);
       border-radius: 999px;
       padding: 5px;
-      box-shadow: 0 4px 20px rgba(31,41,55,.13), 0 0 0 1px rgba(231,221,214,.7);
+      box-shadow: var(--shadow-lg);
       pointer-events: all;
       flex: 1;
     }
@@ -228,26 +253,68 @@
       min-width: 0;
     }
     .navItem:active { opacity: .65; }
-    .navItem.active { color: var(--accent); background: var(--accent-soft); }
+    .navItem.active { color: var(--team-primary); background: var(--team-primary-soft); }
     .navItem .navIcon { font-size: 18px; line-height: 1; }
 
     .bottomPrimaryAction { pointer-events: all; flex-shrink: 0; }
     .primaryCTA {
       width: 60px; height: 60px;
-      background: var(--accent); color: var(--on-accent);
+      background: var(--team-primary); color: var(--on-team-primary);
       border: none; border-radius: 999px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 1px;
       font-family: inherit; cursor: pointer;
-      box-shadow: 0 4px 18px rgba(242,165,110,.55);
+      box-shadow: 0 4px 18px var(--team-primary-glow);
       transition: background .15s, transform .06s;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .primaryCTA:active { transform: scale(.93); background: var(--accent-hover); }
-    .primaryCTA.active { background: var(--accent-hover); box-shadow: 0 2px 10px rgba(242,165,110,.4); }
+    .primaryCTA:active { transform: scale(.93); background: var(--team-primary-hover); }
+    .primaryCTA.active { background: var(--team-primary-hover); box-shadow: 0 2px 10px var(--team-primary-glow); }
     .primaryCTA .ctaIcon { font-size: 26px; font-weight: 700; line-height: 1; }
     .primaryCTA .ctaLabel { font-size: 9px; font-weight: 700; letter-spacing: .3px; }
+
+    /* ===== Theme Sheet ===== */
+    .themeOverlay {
+      position: fixed; inset: 0; z-index: 40;
+      background: rgba(0,0,0,.3);
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+    }
+    .themeOverlay.open { opacity: 1; pointer-events: all; }
+    .themeSheet {
+      position: fixed; bottom: 0; left: 50%; z-index: 41;
+      transform: translateX(-50%) translateY(100%);
+      width: 100%; max-width: 480px;
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      padding: 8px 20px calc(20px + env(safe-area-inset-bottom));
+      box-shadow: 0 -4px 24px rgba(0,0,0,.1);
+      transition: transform .25s cubic-bezier(.32,.72,0,1);
+    }
+    .themeSheet.open { transform: translateX(-50%) translateY(0); }
+    .themeSheet-handle {
+      width: 36px; height: 4px; background: var(--border);
+      border-radius: 999px; margin: 10px auto 18px;
+    }
+    .themeSheet-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+    .themeSheet-sub { font-size: 13px; color: var(--text-muted); margin: 0 0 18px; }
+    .themeList { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .themeItem {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border); border-radius: 14px;
+      background: var(--surface); cursor: pointer;
+      transition: border-color .15s, background .15s;
+      text-align: left; width: 100%; font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .themeItem.selected { border-color: var(--team-primary); background: var(--team-primary-soft); }
+    .themeItem-swatch { display: flex; gap: 4px; flex-shrink: 0; }
+    .themeItem-swatch span { width: 20px; height: 20px; border-radius: 999px; border: 1px solid rgba(0,0,0,.08); display: block; }
+    .themeItem-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+    .themeItem-check { font-size: 15px; color: var(--team-primary); font-weight: 700; }
+    .themeSheet-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
     /* ===== Account / Stats view internals ===== */
     .view-stack { display: flex; flex-direction: column; gap: 14px; }
@@ -483,6 +550,17 @@
       <div class="card">
         <div class="hd">
           <div class="title">
+            <h2>テーマ</h2>
+            <div class="meta" id="currentThemeName">B.LEAGUE 白黒</div>
+          </div>
+        </div>
+        <div class="bd">
+          <button class="btn" id="btnOpenThemeSheet" style="width:100%;justify-content:center;border-radius:14px;padding:14px">テーマを変更する</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="hd">
+          <div class="title">
             <h2>データ管理</h2>
             <div class="meta">バックアップやデータ整理のための機能です。通常の利用では使わなくても大丈夫です。</div>
           </div>
@@ -528,6 +606,19 @@
       <span class="ctaIcon">＋</span>
       <span class="ctaLabel">記録する</span>
     </button>
+  </div>
+</div>
+
+<!-- ===== Theme Sheet ===== -->
+<div class="themeOverlay" id="themeOverlay"></div>
+<div class="themeSheet" id="themeSheet">
+  <div class="themeSheet-handle"></div>
+  <p class="themeSheet-title">推しチームカラーを選べます</p>
+  <p class="themeSheet-sub">あとからいつでも変更できます</p>
+  <div class="themeList" id="themeList"></div>
+  <div class="themeSheet-actions">
+    <button class="btn" id="btnThemeLater">あとで</button>
+    <button class="btn primary" id="btnThemeApply">このテーマにする</button>
   </div>
 </div>
 
@@ -1439,7 +1530,354 @@ console.log("Supabase client initialized", !!supabaseClient);
     setAuthUI(null);
   }
 
+  // ===== Theme =====
+
+  // ---------------------------------------------------------------
+  // Color utilities（外部ライブラリなし）
+  // ---------------------------------------------------------------
+  function _hexToRgb(hex) {
+    const h = hex.replace("#", "");
+    return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+  }
+  /** @param {string} hex @param {number} alpha @returns {string} */
+  function _hexToRgba(hex, alpha) {
+    const { r, g, b } = _hexToRgb(hex);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+  /** 輝度で明暗判定 (>0.6 で "明るい") @param {string} hex @returns {boolean} */
+  function _isLight(hex) {
+    const { r, g, b } = _hexToRgb(hex);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
+  }
+  /** @param {string} hex @param {number} ratio 0–1 @returns {string} */
+  function _darken(hex, ratio) {
+    const { r, g, b } = _hexToRgb(hex);
+    const d = c => Math.max(0, Math.round(c * (1 - ratio))).toString(16).padStart(2, "0");
+    return `#${d(r)}${d(g)}${d(b)}`;
+  }
+
+  // ---------------------------------------------------------------
+  // ニュートラルベース定数（テーマによらず固定）
+  // ---------------------------------------------------------------
+  const BASE = Object.freeze({
+    bg:          "#F5F5F3",
+    surface:     "#FFFFFF",
+    surface2:    "#F8F8F7",
+    text:        "#1F2937",
+    textMuted:   "#6B7280",
+    border:      "#E4E4E7",
+    neutralSoft: "#F0F0F2",
+    shadowColor: "rgba(0,0,0,.07)",
+  });
+
+  // ---------------------------------------------------------------
+  // JSDoc 型定義
+  // ---------------------------------------------------------------
+  /**
+   * @typedef {Object} ThemePalette
+   * チームの公式カラーに近い生色。UI 変換前の値を持つ。
+   * @property {string}  primary        - 主色（CTA・強調）
+   * @property {string}  [primarySoft]  - primary の薄い版。省略時はニュートラル
+   * @property {string}  [secondary]    - 補助色（バッジ・枠・テキスト）
+   * @property {string}  [secondarySoft]
+   * @property {string}  [tertiary]     - 第3色（限定アクセント。省略可）
+   * @property {string}  [tertiarySoft]
+   */
+
+  /**
+   * @typedef {Object} ThemeRules
+   * palette → UI token 変換時のヒント。
+   * @property {boolean}               [secondaryIsLight]  - secondary が白/明るい系。soft をニュートラルへ逃がす
+   * @property {boolean}               [tertiaryIsLight]   - tertiary が明るい系
+   * @property {'primary'|'secondary'} [ctaColor]          - CTA の色源。省略時 primary
+   * @property {'primary'|'secondary'} [navAccentColor]    - ナビ active の色源。省略時 primary
+   * @property {'secondary'|'tertiary'}[chartAccent2]      - グラフ2色目の色源
+   * @property {'secondary'|'tertiary'}[chartAccent3]      - グラフ3色目の色源
+   */
+
+  /**
+   * @typedef {Object} ThemeDefinition
+   * チームテーマの完全な定義。生色＋変換ルール＋例外上書きを持つ。
+   * @property {string}        id
+   * @property {string}        name
+   * @property {string}        shortName
+   * @property {boolean}       [isDefault]
+   * @property {string}        category      - "bleague" | "sample" など
+   * @property {ThemePalette}  palette
+   * @property {ThemeRules}    [rules]
+   * @property {Partial<ResolvedThemeTokens>} [overrides]  - resolveTheme の結果を部分上書き
+   */
+
+  /**
+   * @typedef {Object} ResolvedThemeTokens
+   * CSS 変数へ流し込む UI 役割色のセット。
+   * -- ニュートラルベース
+   * @property {string} bg           @property {string} surface      @property {string} surface2
+   * @property {string} text         @property {string} textMuted    @property {string} border
+   * @property {string} shadowColor
+   * -- primary
+   * @property {string} teamPrimary  @property {string} teamPrimaryHover
+   * @property {string} teamPrimarySoft @property {string} teamPrimaryText @property {string} teamPrimaryGlow
+   * -- secondary
+   * @property {string} teamSecondary @property {string} teamSecondarySoft @property {string} teamSecondaryText
+   * -- tertiary（定義がなければ secondary で代替）
+   * @property {string} teamTertiary @property {string} teamTertiarySoft @property {string} teamTertiaryText
+   * -- ナビ
+   * @property {string} navActiveBg  @property {string} navActiveText @property {string} navInactiveText
+   * -- CTA
+   * @property {string} ctaBg        @property {string} ctaText       @property {string} ctaShadow
+   * -- フォーム
+   * @property {string} focusRing
+   * -- バッジ
+   * @property {string} badgeBg      @property {string} badgeText     @property {string} badgeBorder
+   * -- チャート
+   * @property {string} chart1       @property {string} chart2        @property {string} chart3
+   */
+
+  // ---------------------------------------------------------------
+  // テーマ定義
+  // ---------------------------------------------------------------
+  /** @type {ThemeDefinition[]} */
+  const THEMES = [
+    {
+      id: "bleague-monochrome",
+      name: "B.LEAGUE 白黒",
+      shortName: "白黒",
+      isDefault: true,
+      category: "bleague",
+      palette: {
+        primary:     "#1A1A2E",
+        primarySoft: "#E8E8EC",
+        secondary:   "#6B7280",
+      },
+    },
+  ];
+
+  /** @type {ThemeDefinition[]} */
+  const TEAM_THEME_PRESETS = [
+    { id: "levanga-hokkaido",           name: "レバンガ北海道",                 shortName: "北海道",   category: "b-league", palette: { primary: "#8ec21f", secondary: "#000000" } },
+    { id: "sendai-89ers",               name: "仙台89ERS",                      shortName: "仙台",     category: "b-league", palette: { primary: "#eae713", secondary: "#000000" }, rules: { primaryIsLight: true } },
+    { id: "akita-northern-happinets",   name: "秋田ノーザンハピネッツ",         shortName: "秋田",     category: "b-league", palette: { primary: "#e30072", secondary: "#c38d21" } },
+    { id: "ibaraki-robots",             name: "茨城ロボッツ",                   shortName: "茨城",     category: "b-league", palette: { primary: "#023894", secondary: "#ee8a00" } },
+    { id: "utsunomiya-brex",            name: "宇都宮ブレックス",               shortName: "宇都宮",   category: "b-league", palette: { primary: "#ffd400", secondary: "#12315a" }, rules: { primaryIsLight: true } },
+    { id: "gunma-crane-thunders",       name: "群馬クレインサンダーズ",         shortName: "群馬",     category: "b-league", palette: { primary: "#000000", secondary: "#ffe102", tertiary: "#e60013" } },
+    { id: "koshigaya-alphas",           name: "越谷アルファーズ",               shortName: "越谷",     category: "b-league", palette: { primary: "#7e1b2f", secondary: "#c7b27d" } },
+    { id: "altiri-chiba",               name: "アルティーリ千葉",               shortName: "A千葉",    category: "b-league", palette: { primary: "#030b1c", secondary: "#ffffff" }, rules: { secondaryIsLight: true } },
+    { id: "chiba-jets",                 name: "千葉ジェッツ",                   shortName: "千葉J",    category: "b-league", palette: { primary: "#c8181d", secondary: "#dee1e1" }, rules: { secondaryIsLight: true } },
+    { id: "alvark-tokyo",               name: "アルバルク東京",                 shortName: "A東京",    category: "b-league", palette: { primary: "#e60021", secondary: "#000000" } },
+    { id: "sunrockers-shibuya",         name: "サンロッカーズ渋谷",             shortName: "渋谷",     category: "b-league", palette: { primary: "#fff100", secondary: "#743e94", tertiary: "#000000" }, rules: { primaryIsLight: true } },
+    { id: "kawasaki-brave-thunders",    name: "川崎ブレイブサンダース",         shortName: "川崎",     category: "b-league", palette: { primary: "#8f0038", secondary: "#b58f26" } },
+    { id: "yokohama-b-corsairs",        name: "横浜ビー・コルセアーズ",         shortName: "横浜BC",   category: "b-league", palette: { primary: "#00263A", secondary: "#A6192E", tertiary: "#83704C" } },
+    { id: "toyama-grouses",             name: "富山グラウジーズ",               shortName: "富山",     category: "b-league", palette: { primary: "#d60d1a", secondary: "#000000" } },
+    { id: "san-en-neophoenix",          name: "三遠ネオフェニックス",           shortName: "三遠",     category: "b-league", palette: { primary: "#e80013", secondary: "#fcd200", tertiary: "#000000" } },
+    { id: "seahorses-mikawa",           name: "シーホース三河",                 shortName: "三河",     category: "b-league", palette: { primary: "#00469c", secondary: "#030303", tertiary: "#b39240" } },
+    { id: "fighting-eagles-nagoya",     name: "ファイティングイーグルス名古屋", shortName: "FE名古屋", category: "b-league", palette: { primary: "#223f99", secondary: "#ed1f22" } },
+    { id: "nagoya-diamond-dolphins",    name: "名古屋ダイヤモンドドルフィンズ", shortName: "名古屋D",  category: "b-league", palette: { primary: "#ed1a21", secondary: "#b8a469", tertiary: "#000000" } },
+    { id: "shiga-lakes",                name: "滋賀レイクス",                   shortName: "滋賀",     category: "b-league", palette: { primary: "#015caa", secondary: "#000000", tertiary: "#fac000" } },
+    { id: "kyoto-hannaryz",             name: "京都ハンナリーズ",               shortName: "京都",     category: "b-league", palette: { primary: "#0085a6", secondary: "#f2f2f2" }, rules: { secondaryIsLight: true } },
+    { id: "osaka-evessa",               name: "大阪エヴェッサ",                 shortName: "大阪",     category: "b-league", palette: { primary: "#fc0301", secondary: "#c69933", tertiary: "#000000" } },
+    { id: "shimane-susanoo-magic",      name: "島根スサノオマジック",           shortName: "島根",     category: "b-league", palette: { primary: "#066fb9", secondary: "#a6a6a1" } },
+    { id: "hiroshima-dragonflies",      name: "広島ドラゴンフライズ",           shortName: "広島",     category: "b-league", palette: { primary: "#e84509", secondary: "#02adab" } },
+    { id: "saga-ballooners",            name: "佐賀バルーナーズ",               shortName: "佐賀",     category: "b-league", palette: { primary: "#00a5cf", secondary: "#ed40a8" } },
+    { id: "nagasaki-velca",             name: "長崎ヴェルカ",                   shortName: "長崎",     category: "b-league", palette: { primary: "#1d2d52", secondary: "#ffffff" }, rules: { secondaryIsLight: true } },
+    { id: "ryukyu-golden-kings",        name: "琉球ゴールデンキングス",         shortName: "琉球",     category: "b-league", palette: { primary: "#d6bb72", secondary: "#003d66", tertiary: "#c41a1f" }, rules: { primaryIsLight: true } },
+  ];
+
+  /** モノクローム先頭 → チームプリセット順の表示用リスト @type {ThemeDefinition[]} */
+  const ALL_THEMES = [...THEMES, ...TEAM_THEME_PRESETS];
+
+  const THEME_KEY = "bb_theme_id";
+  const THEME_ONBOARDING_KEY = "bb_theme_onboarding_seen";
+
+  let activeThemeId = localStorage.getItem(THEME_KEY) || "bleague-monochrome";
+
+  /** @param {string} id @returns {ThemeDefinition} */
+  function getThemeById(id) {
+    return ALL_THEMES.find(t => t.id === id) || ALL_THEMES.find(t => t.isDefault) || ALL_THEMES[0];
+  }
+
+  // ---------------------------------------------------------------
+  /**
+   * ThemeDefinition → ResolvedThemeTokens へ変換する。
+   * 責務: palette を読む → rules で light 判定 → soft 色を決める
+   *       → CTA / nav / badge / chart の役割色へ変換 → overrides で例外上書き
+   * @param {ThemeDefinition} def
+   * @returns {ResolvedThemeTokens}
+   */
+  function resolveTheme(def) {
+    const p = def.palette;
+    const r = def.rules || {};
+
+    const primary   = p.primary;
+    const pSoft     = p.primarySoft   || BASE.neutralSoft;
+    const secondary = p.secondary     || BASE.textMuted;
+    const tertiary  = p.tertiary      || null;
+
+    // secondary が白系の場合、soft はニュートラルへ逃がして UI 白飛びを防ぐ
+    const sSoft = r.secondaryIsLight ? BASE.neutralSoft : (p.secondarySoft || BASE.neutralSoft);
+    // tertiary が明るい系の場合も同様
+    const tSoft = r.tertiaryIsLight  ? BASE.neutralSoft : (p.tertiarySoft  || BASE.neutralSoft);
+
+    // CTA / nav の色源（rules で切り替え可能。省略時は primary）
+    const ctaSrc  = r.ctaColor       === "secondary" ? secondary : primary;
+    const ctaSSrc = r.ctaColor       === "secondary" ? sSoft     : pSoft;
+    const navSrc  = r.navAccentColor === "secondary" ? secondary : primary;
+    const navSSrc = r.navAccentColor === "secondary" ? sSoft     : pSoft;
+
+    // テキスト色：輝度で自動判定
+    const onPrimary   = _isLight(primary)   ? BASE.text : "#FFFFFF";
+    const onSecondary = _isLight(secondary) ? BASE.text : "#FFFFFF";
+    const onTertiary  = tertiary ? (_isLight(tertiary) ? BASE.text : "#FFFFFF") : BASE.text;
+    const onCta       = _isLight(ctaSrc)    ? BASE.text : "#FFFFFF";
+
+    /** @type {ResolvedThemeTokens} */
+    const tokens = {
+      // ニュートラルベース（テーマによらず固定）
+      bg: BASE.bg, surface: BASE.surface, surface2: BASE.surface2,
+      text: BASE.text, textMuted: BASE.textMuted, border: BASE.border,
+      shadowColor: BASE.shadowColor,
+
+      // primary
+      teamPrimary:      primary,
+      teamPrimaryHover: _darken(primary, 0.12),
+      teamPrimarySoft:  pSoft,
+      teamPrimaryText:  onPrimary,
+      teamPrimaryGlow:  _hexToRgba(primary, 0.35),
+
+      // secondary
+      teamSecondary:     secondary,
+      teamSecondarySoft: sSoft,
+      teamSecondaryText: onSecondary,
+
+      // tertiary（定義なし → secondary で代替。直接参照は最小限に）
+      teamTertiary:     tertiary || secondary,
+      teamTertiarySoft: tertiary ? tSoft : sSoft,
+      teamTertiaryText: tertiary ? onTertiary : onSecondary,
+
+      // ナビ
+      navActiveBg:     navSSrc,
+      navActiveText:   navSrc,
+      navInactiveText: BASE.textMuted,
+
+      // CTA
+      ctaBg:    ctaSrc,
+      ctaText:  onCta,
+      ctaShadow: _hexToRgba(ctaSrc, 0.4),
+
+      // フォーム
+      focusRing: pSoft,
+
+      // バッジ（white secondary の場合は border を濃くして識別性を確保）
+      badgeBg:     sSoft,
+      badgeText:   r.secondaryIsLight ? BASE.text : secondary,
+      badgeBorder: r.secondaryIsLight ? BASE.border : secondary,
+
+      // チャート
+      chart1: primary,
+      chart2: secondary,
+      chart3: tertiary || BASE.textMuted,
+    };
+
+    // overrides を最後に上書き（テーマ固有の例外調整）
+    if (def.overrides) Object.assign(tokens, def.overrides);
+
+    return tokens;
+  }
+
+  // ---------------------------------------------------------------
+  /**
+   * ResolvedThemeTokens を CSS 変数へ流し込む
+   * @param {ResolvedThemeTokens} tokens
+   */
+  function applyResolvedTheme(tokens) {
+    const root = document.documentElement;
+    const set  = (k, v) => { if (v != null) root.style.setProperty(k, v); };
+    set("--bg",         tokens.bg);
+    set("--surface",    tokens.surface);
+    set("--surface-2",  tokens.surface2);
+    set("--text",       tokens.text);
+    set("--text-muted", tokens.textMuted);
+    set("--border",     tokens.border);
+    set("--team-primary",        tokens.teamPrimary);
+    set("--team-primary-hover",  tokens.teamPrimaryHover);
+    set("--team-primary-soft",   tokens.teamPrimarySoft);
+    set("--on-team-primary",     tokens.teamPrimaryText);
+    set("--team-primary-glow",   tokens.teamPrimaryGlow);
+    set("--team-secondary",      tokens.teamSecondary);
+    set("--team-secondary-soft", tokens.teamSecondarySoft);
+    set("--on-team-secondary",   tokens.teamSecondaryText);
+    set("--team-tertiary",       tokens.teamTertiary);
+    set("--team-tertiary-soft",  tokens.teamTertiarySoft);
+    set("--on-team-tertiary",    tokens.teamTertiaryText);
+  }
+
+  /**
+   * ThemeDefinition または themeId を受け取り、解決・適用・UI 更新まで行う
+   * @param {ThemeDefinition|string} themeOrId
+   */
+  function applyTheme(themeOrId) {
+    const def    = typeof themeOrId === "string" ? getThemeById(themeOrId) : themeOrId;
+    const tokens = resolveTheme(def);
+    applyResolvedTheme(tokens);
+    activeThemeId = def.id;
+    const nameEl = document.getElementById("currentThemeName");
+    if (nameEl) nameEl.textContent = def.name;
+  }
+
+  // --- テーマシート ---
+  const themeOverlay  = document.getElementById("themeOverlay");
+  const themeSheetEl  = document.getElementById("themeSheet");
+  const themeListEl   = document.getElementById("themeList");
+
+  function renderThemeList(selectedId) {
+    themeListEl.innerHTML = "";
+    ALL_THEMES.forEach(t => {
+      const btn = document.createElement("button");
+      btn.className = "themeItem" + (t.id === selectedId ? " selected" : "");
+      btn.dataset.id = t.id;
+      const swatchColors = [t.palette.primary, t.palette.secondary, t.palette.tertiary].filter(Boolean);
+      const swatchHtml = swatchColors.map(c => `<span style="background:${c}"></span>`).join("");
+      btn.innerHTML = `
+        <div class="themeItem-swatch">${swatchHtml}</div>
+        <span class="themeItem-name">${t.name}</span>
+        ${t.id === selectedId ? '<span class="themeItem-check">✓</span>' : ""}
+      `;
+      btn.addEventListener("click", () => {
+        applyTheme(t);
+        renderThemeList(t.id);
+      });
+      themeListEl.appendChild(btn);
+    });
+  }
+
+  function openThemeSheet() {
+    renderThemeList(activeThemeId);
+    themeSheetEl.classList.add("open");
+    themeOverlay.classList.add("open");
+  }
+
+  function closeThemeSheet() {
+    localStorage.setItem(THEME_KEY, activeThemeId);
+    themeSheetEl.classList.remove("open");
+    themeOverlay.classList.remove("open");
+  }
+
+  document.getElementById("btnThemeLater").addEventListener("click", closeThemeSheet);
+  document.getElementById("btnThemeApply").addEventListener("click", closeThemeSheet);
+  document.getElementById("btnOpenThemeSheet").addEventListener("click", openThemeSheet);
+  themeOverlay.addEventListener("click", closeThemeSheet);
+
+  // --- 初期化 ---
+  function initTheme() {
+    applyTheme(activeThemeId);
+    if (!localStorage.getItem(THEME_ONBOARDING_KEY)) {
+      localStorage.setItem(THEME_ONBOARDING_KEY, "1");
+      setTimeout(() => openThemeSheet(), 800);
+    }
+  }
+
   // ===== Init =====
+  initTheme();
   show("list");
   initAuth();
 </script>
