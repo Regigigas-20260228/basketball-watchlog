@@ -605,12 +605,8 @@ function readQuickForm() {
   const supportedSide = getQfSupportedSide();
 
   // 詳細セクションが開いているときだけ詳細フィールドを読む
-  const detailEl = document.getElementById("qfdDetail");
-  const detailOpen = detailEl && !detailEl.classList.contains("hide");
-  const qfdQContent = document.getElementById("qfd_quartersContent");
-  const qfdQVisible = detailOpen && qfdQContent && !qfdQContent.classList.contains("hide");
-  const qfdQBody = document.getElementById("qfd_quartersBody");
-  const qfdPBody = document.getElementById("qfd_playersBody");
+  const detailOpen = !qfdDetailEl.classList.contains("hide");
+  const qfdQVisible = detailOpen && !qfdQContent.classList.contains("hide");
 
   return {
     id:            null,
@@ -622,7 +618,7 @@ function readQuickForm() {
     seat:          detailOpen ? document.getElementById("qfd_seat").value.trim()  : "",
     finalHome,
     finalAway,
-    result:        computeResult(finalHome, finalAway, homeTeam, awayTeam),
+    result:        getResultCategory({ finalHome, finalAway, supportedSide }),
     supportedSide,
     supportedTeam: supportedSide === "home" ? homeTeam : (supportedSide === "away" ? awayTeam : ""),
     useQuarters:   qfdQVisible,
@@ -739,7 +735,7 @@ function fillForm(rec){
 
   f_finalHome.value = rec.finalHome ?? "";
   f_finalAway.value = rec.finalAway ?? "";
-  f_result.value = rec.result || computeResult(rec.finalHome, rec.finalAway, rec.homeTeam, rec.awayTeam);
+  f_result.value = computeResult(rec.finalHome, rec.finalAway, rec.homeTeam, rec.awayTeam);
 
   fillQuarters(rec.quarters || []);
   const qs = rec.quarters || [];
@@ -848,7 +844,7 @@ function readForm(){
 
     finalHome,
     finalAway,
-    result: computeResult(finalHome, finalAway, homeTeam, awayTeam),
+    result: getResultCategory({ finalHome, finalAway, supportedSide }),
     useQuarters: quartersVisible,
     quarters,
     players: readPlayers(),
@@ -945,10 +941,6 @@ function populateFilterOptions(selectEl, values, placeholder) {
 
 // ===== Stats helpers =====
 
-function getStatsSummary(recs) {
-  return { total: recs.length };
-}
-
 function getCheeringStats(recs) {
   const supported = recs.filter(r => r.supportedSide === "home" || r.supportedSide === "away");
   let wins = 0, losses = 0, draws = 0;
@@ -1011,6 +1003,10 @@ function getMonthlyCounts(recs) {
     .map(([month, count]) => ({ month, count }));
 }
 
+function fmtMatchup(r) {
+  return `${r.homeTeam || "HOME"} vs ${r.awayTeam || "AWAY"}`;
+}
+
 function getRecentRecords(recs, limit = 3) {
   return [...recs]
     .sort((a, b) => (b.dateTime || b.updatedAt || "").localeCompare(a.dateTime || a.updatedAt || ""))
@@ -1034,7 +1030,6 @@ function renderStats() {
     return;
   }
 
-  const summary   = getStatsSummary(records);
   const cheering  = getCheeringStats(records);
   const teams     = getTopTeams(records);
   const venues    = getTopVenues(records);
@@ -1088,7 +1083,7 @@ function renderStats() {
 
   // --- 最近の記録 ---
   const recentHtml = recent.map(r => {
-    const matchup = `${r.homeTeam || "HOME"} vs ${r.awayTeam || "AWAY"}`;
+    const matchup = fmtMatchup(r);
     const score = (r.finalHome != null && r.finalAway != null) ? `${r.finalHome}–${r.finalAway}` : "—";
     const dt = fmtDateTime(r.dateTime) || "日付未設定";
     return `
@@ -1104,7 +1099,7 @@ function renderStats() {
       <div class="bd">
         <div class="statsNumGrid">
           <div class="statsNum statsNum--accent">
-            <span class="statsNum-value">${summary.total}</span>
+            <span class="statsNum-value">${records.length}</span>
             <span class="statsNum-label">総観戦数</span>
           </div>
         </div>
@@ -1275,7 +1270,7 @@ function renderHome() {
   // ヒーローに最新1件を表示しているため、リストは2番目以降を最大3件表示する
   const recentRecs = latest ? getRecentRecords(records, 4).slice(1) : [];
   const recentItemsHtml = recentRecs.map(r => {
-    const matchup = `${r.homeTeam || "HOME"} vs ${r.awayTeam || "AWAY"}`;
+    const matchup = fmtMatchup(r);
     const score   = r.finalHome != null && r.finalAway != null ? `${r.finalHome}–${r.finalAway}` : "—";
     const dt      = fmtDateTime(r.dateTime) || "日付未設定";
     return `
@@ -1399,7 +1394,7 @@ function renderList(){
   emptyEl.classList.toggle("hide", filtered.length !== 0);
 
   filtered.forEach(r => {
-    const matchup = `${r.homeTeam || "HOME"} vs ${r.awayTeam || "AWAY"}`;
+    const matchup = fmtMatchup(r);
     const score = (r.finalHome != null && r.finalAway != null) ? `${r.finalHome} - ${r.finalAway}` : "—";
     const dt = fmtDateTime(r.dateTime) || "日付未設定";
     const venue = r.venue || "会場未設定";
@@ -1441,10 +1436,12 @@ function openDetail(id){
     ? `${esc(String(rec.finalHome))}<span class="detailHero-sep"> - </span>${esc(String(rec.finalAway))}`
     : `—<span class="detailHero-sep"> - </span>—`;
 
-  let resultBadge = "";
-  if (rec.result === "win")       resultBadge = `<span class="detailHero-result win">勝利</span>`;
-  else if (rec.result === "loss") resultBadge = `<span class="detailHero-result loss">敗戦</span>`;
-  else if (rec.result === "draw") resultBadge = `<span class="detailHero-result draw">引き分け</span>`;
+  const _resultCat = getResultCategory(rec);
+  const resultBadge = ({
+    win:  `<span class="detailHero-result win">勝利</span>`,
+    loss: `<span class="detailHero-result loss">敗戦</span>`,
+    draw: `<span class="detailHero-result draw">引き分け</span>`,
+  }[_resultCat] || "");
 
   const chips = [
     rec.dateTime ? fmtDateTime(rec.dateTime) : "日付未設定",
