@@ -301,7 +301,10 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   min-width: 0;
 }
 .navItem:active { opacity: .65; }
-.navItem.active { color: var(--nav-active-color); background: var(--nav-active-bg); }
+.navItem.active {
+  color: var(--nav-active-color);
+  background: var(--nav-active-bg);
+}
 .navItem .navIcon {
   display: inline-flex; align-items: center; justify-content: center;
   color: var(--icon-default); line-height: 1;
