@@ -135,23 +135,19 @@
     </div>
   </section>
 
-  <!-- FORM -->
+  <!-- FORM（新規入力と同じ文法） -->
   <section id="viewForm" class="hide">
-    <div class="card">
-      <div class="hd">
-        <div class="title">
-          <h2 id="formTitle">編集</h2>
-          <div class="meta">基本情報の下に詳細項目があります</div>
+    <div class="quickEntrySheet viewFormSheet">
+      <div class="quickEntryHeader">
+        <div class="quickEntryHeader-titles">
+          <h2 class="quickEntryHeader-title" id="formTitle">編集</h2>
+          <p class="quickEntryHeader-sub">細かい内容もあとから追記できます</p>
         </div>
-        <div class="right">
-          <button class="btn" id="btnCancel">キャンセル</button>
-          <button class="btn primary" id="btnSave">保存</button>
-        </div>
+        <button class="quickEntryClose" id="btnCancel" aria-label="閉じる">✕</button>
       </div>
-      <!-- padding:0 で quickFieldRow の left/right 16px を直接カードに当てる -->
-      <div class="bd" style="padding:0">
 
-        <!-- ===== 基本入力（quickFieldRow スタイル） ===== -->
+      <div class="quickEntryBody">
+        <!-- ===== 基本入力 ===== -->
         <div class="quickFieldRow">
           <span class="quickFieldLabel formFieldLabel">
             <span class="formFieldIcon" aria-hidden="true">
@@ -164,31 +160,31 @@
             </span>
             <span>観戦日</span>
           </span>
-          <input id="f_dateTime" type="date" />
+          <input id="f_dateTime" type="date" enterkeyhint="next" />
         </div>
         <div class="quickFieldRow">
           <span class="quickFieldLabel">リーグ</span>
-          <input id="f_league" type="text" placeholder="例：B.LEAGUE / NBA" autocomplete="off" />
+          <input id="f_league" type="text" placeholder="例：B.LEAGUE / NBA" autocomplete="off" enterkeyhint="next" />
           <div class="qeSuggestions" id="sug_f_league"></div>
         </div>
         <div class="quickFieldRow">
           <span class="quickFieldLabel">ホームチーム</span>
-          <input id="f_homeTeam" type="text" placeholder="例：千葉ジェッツ" autocomplete="off" />
+          <input id="f_homeTeam" type="text" placeholder="例：千葉ジェッツ" autocomplete="off" enterkeyhint="next" />
           <div class="qeSuggestions" id="sug_f_homeTeam"></div>
         </div>
         <div class="quickFieldRow">
           <span class="quickFieldLabel">アウェイチーム</span>
-          <input id="f_awayTeam" type="text" placeholder="例：琉球ゴールデンキングス" autocomplete="off" />
+          <input id="f_awayTeam" type="text" placeholder="例：琉球ゴールデンキングス" autocomplete="off" enterkeyhint="next" />
           <div class="qeSuggestions" id="sug_f_awayTeam"></div>
         </div>
         <div class="quickFieldRow quickFieldRow--cols2">
           <div class="quickFieldCol">
             <span class="quickFieldLabel">スコア（ホーム）</span>
-            <input id="f_finalHome" type="number" inputmode="numeric" min="0" placeholder="82" />
+            <input id="f_finalHome" type="number" inputmode="numeric" min="0" placeholder="82" enterkeyhint="next" />
           </div>
           <div class="quickFieldCol">
             <span class="quickFieldLabel">スコア（アウェイ）</span>
-            <input id="f_finalAway" type="number" inputmode="numeric" min="0" placeholder="78" />
+            <input id="f_finalAway" type="number" inputmode="numeric" min="0" placeholder="78" enterkeyhint="next" />
           </div>
         </div>
         <div class="quickFieldRow">
@@ -201,15 +197,11 @@
             </span>
             <span>会場</span>
           </span>
-          <input id="f_venue" type="text" placeholder="例：LaLa arena TOKYO-BAY" autocomplete="off" />
+          <input id="f_venue" type="text" placeholder="例：LaLa arena TOKYO-BAY" autocomplete="off" enterkeyhint="next" />
           <div class="qeSuggestions" id="sug_f_venue"></div>
         </div>
         <div class="quickFieldRow">
-          <span class="quickFieldLabel">座席</span>
-          <input id="f_seat" type="text" placeholder="例：2階 S席 12列 8番" />
-        </div>
-        <div class="quickFieldRow">
-          <span class="quickFieldLabel">応援していた側</span>
+          <span class="quickFieldLabel">応援していたのは</span>
           <div class="qfSupportedSide">
             <label class="qfSideOption">
               <input type="radio" name="f_supportedSide" value="home" />
@@ -225,93 +217,101 @@
             </label>
           </div>
         </div>
+        <div class="quickFieldRow">
+          <span class="quickFieldLabel">満足度</span>
+          <div class="starInput" id="fStarInput">
+            <button type="button" class="starInput-star" data-val="1" aria-label="1">★</button>
+            <button type="button" class="starInput-star" data-val="2" aria-label="2">★</button>
+            <button type="button" class="starInput-star" data-val="3" aria-label="3">★</button>
+            <button type="button" class="starInput-star" data-val="4" aria-label="4">★</button>
+            <button type="button" class="starInput-star" data-val="5" aria-label="5">★</button>
+          </div>
+          <input type="hidden" id="f_satisfaction">
+        </div>
 
         <!-- ===== 詳細入力 ===== -->
-        <div class="hr" style="margin:0"></div>
-        <div class="formDetailSection">
-          <div class="sectionTitle">試合結果 <span class="autoBadge">自動計算</span></div>
-          <div class="row">
-            <label>勝敗
-              <input id="f_result" type="text" readonly placeholder="スコア入力で自動" />
-            </label>
-          </div>
-
-          <div id="quartersSection">
-            <div id="quartersAddArea" class="right">
-              <button class="btn" id="btnShowQuarters">＋ クオーター別得点を追加</button>
-            </div>
-            <div id="quartersContent" class="hide">
-              <div class="sectionTitle">クオーター別得点</div>
-              <table class="table" id="quartersTable">
-                <thead>
-                  <tr>
-                    <th style="width:90px">Q</th>
-                    <th>ホーム</th>
-                    <th>アウェイ</th>
-                    <th style="width:120px">操作</th>
-                  </tr>
-                </thead>
-                <tbody id="quartersBody"></tbody>
-              </table>
-              <div class="right">
-                <button class="btn" id="btnHideQuarters">－ クオーター別得点を削除</button>
-                <button class="btn" id="btnAddOT">＋ 延長(OT)追加</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="hr"></div>
-          <div class="sectionTitle">注目選手のスタッツ</div>
-          <div class="small">名前だけでもOK。スタッツは任意です</div>
-          <div id="playersBody" class="playerCardList"></div>
-          <div class="right">
-            <button class="btn" id="btnAddPlayer">＋ 選手追加</button>
-          </div>
-
-          <div class="hr"></div>
-          <div class="sectionTitle">試合内容のメモ</div>
-          <div class="row">
-            <label>試合の展開（逆転、接戦など）
-              <textarea id="f_flow" placeholder="例：前半ビハインドから3Qで逆転、終盤は1点差の攻防…"></textarea>
-            </label>
-            <label>印象に残ったプレー
-              <textarea id="f_play" placeholder="例：残り10秒のクラッチスリー、ブロックからの速攻…"></textarea>
-            </label>
-            <label>自分の選ぶMVP
-              <input id="f_mvp" type="text" placeholder="例：#12 〇〇（理由も書くなら上のメモへ）" />
-            </label>
-          </div>
-
-          <div class="hr"></div>
-          <div class="sectionTitle">会場の雰囲気・体験</div>
-          <div class="row">
-            <label>アリーナグルメ
-              <textarea id="f_food" placeholder="例：唐揚げ丼、クラフトビール…"></textarea>
-            </label>
-            <label>演出・イベント
-              <textarea id="f_event" placeholder="例：入場演出が派手、ハーフタイム企画…"></textarea>
-            </label>
-            <label>応援の様子
-              <textarea id="f_cheer" placeholder="例：コールが熱い、アウェイブースター多め…"></textarea>
-            </label>
-            <label>
-              <span class="formFieldLabel">
-                <span class="formFieldIcon" aria-hidden="true">
-                  <svg class="iconSvg iconSvg--formAux" viewBox="0 0 24 24" focusable="false">
-                    <path d="M5 19h5"></path>
-                    <path d="M13.2 6.2l4.6 4.6"></path>
-                    <path d="M4.5 19.5l1.2-4.5L14.7 6l3.3 3.3-8.9 8.9-4.6 1.3z"></path>
-                  </svg>
-                </span>
-                <span>同行者・備考</span>
-              </span>
-              <textarea id="f_note" placeholder="例：家族と、雨で移動大変、次は早めに入場…"></textarea>
-            </label>
-          </div>
-
-          <div class="hr"></div>
-          <div class="small">※ 登録なしでも記録できます。アカウント登録すると、機種変更や別端末でも記録を引き継げます。</div>
+        <div class="qfdToggleRow">
+          <button type="button" id="btnQfdToggleEdit" class="qfdToggleBtn">＋ 詳細に記録する</button>
         </div>
+        <div id="qfdDetailEdit" class="hide">
+          <div class="quickFieldRow">
+            <span class="quickFieldLabel">座席</span>
+            <input id="f_seat" type="text" placeholder="例：2階 S席 12列 8番" />
+          </div>
+          <div class="qfdSectionHeader">
+            <span class="qfdSectionLabel">クオーター別得点</span>
+            <div id="quartersAddArea">
+              <button class="btn" id="btnShowQuarters">追加</button>
+            </div>
+          </div>
+          <div id="quartersContent" class="hide" style="padding:0 16px 10px">
+            <table class="table" id="quartersTable">
+              <thead><tr>
+                <th style="width:70px">Q</th>
+                <th>ホーム</th><th>アウェイ</th>
+                <th style="width:70px">操作</th>
+              </tr></thead>
+              <tbody id="quartersBody"></tbody>
+            </table>
+            <div style="margin-top:8px" class="right">
+              <button class="btn" id="btnHideQuarters">－ 削除</button>
+              <button class="btn" id="btnAddOT">＋ OT</button>
+            </div>
+          </div>
+          <div class="qfdSectionHeader">
+            <span class="qfdSectionLabel">注目選手</span>
+            <button class="btn" id="btnAddPlayer">＋ 追加</button>
+          </div>
+          <div id="playersBody" class="playerCardList"></div>
+          <div class="quickFieldRow">
+            <span class="quickFieldLabel">試合の展開</span>
+            <textarea id="f_flow" class="qfdTextarea" placeholder="例：前半ビハインドから3Qで逆転…"></textarea>
+          </div>
+          <div class="quickFieldRow">
+            <span class="quickFieldLabel">印象に残ったプレー</span>
+            <textarea id="f_play" class="qfdTextarea" placeholder="例：残り10秒のクラッチスリー…"></textarea>
+          </div>
+          <div class="quickFieldRow">
+            <span class="quickFieldLabel">自分の選ぶMVP</span>
+            <input id="f_mvp" type="text" placeholder="例：#12 〇〇" />
+          </div>
+          <div class="quickFieldRow">
+            <span class="quickFieldLabel">アリーナグルメ</span>
+            <textarea id="f_food" class="qfdTextarea" placeholder="例：唐揚げ丼、クラフトビール…"></textarea>
+          </div>
+          <div class="quickFieldRow">
+            <span class="quickFieldLabel">演出・イベント</span>
+            <textarea id="f_event" class="qfdTextarea" placeholder="例：入場演出が派手…"></textarea>
+          </div>
+          <div class="quickFieldRow">
+            <span class="quickFieldLabel">応援の様子</span>
+            <textarea id="f_cheer" class="qfdTextarea" placeholder="例：コールが熱い…"></textarea>
+          </div>
+          <div class="quickFieldRow">
+            <span class="quickFieldLabel formFieldLabel">
+              <span class="formFieldIcon" aria-hidden="true">
+                <svg class="iconSvg iconSvg--formAux" viewBox="0 0 24 24" focusable="false">
+                  <path d="M5 19h5"></path>
+                  <path d="M13.2 6.2l4.6 4.6"></path>
+                  <path d="M4.5 19.5l1.2-4.5L14.7 6l3.3 3.3-8.9 8.9-4.6 1.3z"></path>
+                </svg>
+              </span>
+              <span>同行者・備考</span>
+            </span>
+            <textarea id="f_note" class="qfdTextarea" placeholder="例：家族と、雨で移動大変…"></textarea>
+          </div>
+          <!-- 勝敗は自動計算（hidden） -->
+          <input id="f_result" type="hidden" />
+        </div>
+
+        <div class="quickFieldRow" style="padding-bottom:8px">
+          <div class="small" style="color:var(--text-muted);font-size:11px">※ 登録なしでも記録できます。アカウント登録すると機種変更後も引き継げます。</div>
+        </div>
+      </div>
+
+      <div class="quickEntryFooter">
+        <button class="btn" id="btnCancel2">キャンセル</button>
+        <button class="btn primary quickEntryFooter-save" id="btnSave">保存する</button>
       </div>
     </div>
   </section>
@@ -547,6 +547,17 @@
           <span>ひとことメモ</span>
         </span>
         <input id="qf_memo" type="text" placeholder="例：接戦で最高だった！" enterkeyhint="done" />
+      </div>
+      <div class="quickFieldRow">
+        <span class="quickFieldLabel">満足度</span>
+        <div class="starInput" id="qfStarInput">
+          <button type="button" class="starInput-star" data-val="1" aria-label="1">★</button>
+          <button type="button" class="starInput-star" data-val="2" aria-label="2">★</button>
+          <button type="button" class="starInput-star" data-val="3" aria-label="3">★</button>
+          <button type="button" class="starInput-star" data-val="4" aria-label="4">★</button>
+          <button type="button" class="starInput-star" data-val="5" aria-label="5">★</button>
+        </div>
+        <input type="hidden" id="qf_satisfaction">
       </div>
 
       <!-- 詳細トグル -->

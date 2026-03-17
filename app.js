@@ -35,6 +35,55 @@ function uid() {
   return "id_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
 }
 
+// ===== Star rating helpers =====
+function updateStarDisplay(containerId, val) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const v = Number(val) || 0;
+  container.querySelectorAll(".starInput-star").forEach(btn => {
+    const bv = Number(btn.dataset.val);
+    btn.classList.remove("starInput-star--on", "starInput-star--half");
+    if (v >= bv)       btn.classList.add("starInput-star--on");
+    else if (v >= bv - 0.5) btn.classList.add("starInput-star--half");
+  });
+}
+
+function setStarInput(containerId, hiddenId, val) {
+  const hidden = document.getElementById(hiddenId);
+  if (hidden) hidden.value = val ?? "";
+  updateStarDisplay(containerId, val);
+}
+
+function initStarInput(containerId, hiddenId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.querySelectorAll(".starInput-star").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const hidden = document.getElementById(hiddenId);
+      const fullVal = Number(btn.dataset.val);
+      const rect = btn.getBoundingClientRect();
+      const isLeft = e.clientX - rect.left < rect.width / 2;
+      const clicked = isLeft ? fullVal - 0.5 : fullVal;
+      const current = hidden ? Number(hidden.value) || 0 : 0;
+      const next = current === clicked ? 0 : clicked;
+      setStarInput(containerId, hiddenId, next || null);
+    });
+  });
+}
+
+function renderStarsDisplay(val, max = 5) {
+  if (val == null || val === 0) return "";
+  const v = Number(val);
+  let html = '<span class="starDisplay" aria-label="満足度">';
+  for (let i = 1; i <= max; i++) {
+    const full = v >= i;
+    const half = !full && v >= i - 0.5;
+    html += `<span class="starDisplay-star${full ? " starDisplay-star--on" : half ? " starDisplay-star--half" : ""}" aria-hidden="true">★</span>`;
+  }
+  html += "</span>";
+  return html;
+}
+
 function fmtDateTime(iso) {
   if (!iso) return "";
   const full = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -179,6 +228,7 @@ document.getElementById("bestPickerQ").addEventListener("input", e => renderBest
 // インライン試合ピッカーの検索
 document.getElementById("bestInlineQ").addEventListener("input", e => renderBestInlinePicker(e.target.value));
 document.getElementById("btnCancel").addEventListener("click", () => show("list"));
+document.getElementById("btnCancel2").addEventListener("click", () => show("list"));
 document.getElementById("btnSave").addEventListener("click", () => onSave().catch(console.error));
 document.getElementById("btnEdit").addEventListener("click", () => openFormForEdit(currentId));
 document.getElementById("btnDelete").addEventListener("click", () => onDelete(currentId).catch(console.error));
@@ -244,6 +294,7 @@ function rowToRecord(row) {
     event:        row.event,
     cheer:        row.cheer,
     note:         row.note,
+    satisfaction: row.satisfaction ?? null,
     createdAt:    row.created_at,
     updatedAt:    row.updated_at,
   };
@@ -563,6 +614,33 @@ function initSuggestionFilters() {
 }
 
 /** 詳細トグル・クオーター・選手ボタンの初期化（クイック記録フォーム用） */
+function initEditDetailToggle() {
+  const toggleBtn = document.getElementById("btnQfdToggleEdit");
+  const detailEl  = document.getElementById("qfdDetailEdit");
+  if (!toggleBtn || !detailEl) return;
+  toggleBtn.addEventListener("click", () => {
+    const nowOpen = detailEl.classList.contains("hide");
+    detailEl.classList.toggle("hide", !nowOpen);
+    toggleBtn.textContent = nowOpen ? "－ 詳細入力を閉じる" : "＋ 詳細に記録する";
+  });
+}
+
+function openEditDetailIfNeeded(rec) {
+  // 詳細フィールドに何か書いてあれば自動展開する
+  const hasDetail = [rec.flow, rec.play, rec.mvp, rec.food, rec.event, rec.cheer, rec.note, rec.seat]
+    .some(v => v && v.toString().trim() !== "");
+  const detailEl  = document.getElementById("qfdDetailEdit");
+  const toggleBtn = document.getElementById("btnQfdToggleEdit");
+  if (!detailEl || !toggleBtn) return;
+  if (hasDetail) {
+    detailEl.classList.remove("hide");
+    toggleBtn.textContent = "－ 詳細入力を閉じる";
+  } else {
+    detailEl.classList.add("hide");
+    toggleBtn.textContent = "＋ 詳細に記録する";
+  }
+}
+
 function initQfdDetail() {
   qfdToggleBtn.addEventListener("click", () => {
     const nowOpen = qfdDetailEl.classList.contains("hide");
@@ -618,6 +696,7 @@ function openQuickFormForNew() {
   qf_finalAway.value = "";
   qf_venue.value     = "";
   qf_memo.value      = "";
+  setStarInput("qfStarInput", "qf_satisfaction", null);
 
   // 過去入力から候補を初期描画
   renderSuggestions("sug_league",   getUniqueLeagues(records), qf_league,   qf_homeTeam);
@@ -674,6 +753,7 @@ function readQuickForm() {
     event:         detailOpen  ? document.getElementById("qfd_event").value.trim() : "",
     cheer:         detailOpen  ? document.getElementById("qfd_cheer").value.trim() : "",
     note:          qf_memo.value.trim(),
+    satisfaction:  (() => { const v = Number(document.getElementById("qf_satisfaction").value); return v > 0 ? v : null; })(),
     createdAt:     null,
     updatedAt:     null,
   };
@@ -733,6 +813,7 @@ function openFormForEdit(id){
   currentId = id;
   formTitle.textContent = "編集";
   fillForm(rec);
+  openEditDetailIfNeeded(rec);
   // 過去入力候補を初期描画
   renderSuggestions("sug_f_league",   getUniqueLeagues(records), f_league,   f_homeTeam);
   renderSuggestions("sug_f_homeTeam", getUniqueTeams(records),   f_homeTeam, f_awayTeam, updateFSupportedSide);
@@ -800,6 +881,8 @@ function fillForm(rec){
   // 応援していた側（既存データを尊重し、以降の自動上書きを抑制）
   setFSupportedSide(rec.supportedSide || "");
   fSupportedSideManuallySet = true;
+
+  setStarInput("fStarInput", "f_satisfaction", rec.satisfaction ?? null);
 }
 
 async function onSave(){
@@ -903,6 +986,7 @@ function readForm(){
     event: f_event.value.trim(),
     cheer: f_cheer.value.trim(),
     note: f_note.value.trim(),
+    satisfaction: (() => { const v = Number(document.getElementById("f_satisfaction").value); return v > 0 ? v : null; })(),
 
     createdAt: null,
     updatedAt: null
@@ -1222,7 +1306,7 @@ function renderHome() {
 
   const latest = getRecentRecords(records, 1)[0] || null;
 
-  // ── Hero card ──────────────────────────────────────────────
+  // ── Hero card: 「前回の記録を完成させる」 ──────────────────
   let heroHtml;
   if (!latest) {
     heroHtml = `
@@ -1232,57 +1316,102 @@ function renderHome() {
         <button class="btn primary primaryButton" id="btnHomeRecord">＋ 記録する</button>
       </div>`;
   } else {
+    const dt = fmtDateTime(latest.dateTime) || "日付未設定";
+
     const homeTeam = latest.homeTeam || "HOME";
     const awayTeam = latest.awayTeam || "AWAY";
+
+    // 応援バッジ
+    const cheerBadge = `<span class="homeHero-cheerBadge">応援</span>`;
+    const homeCheer = latest.supportedSide === "home" ? cheerBadge : "";
+    const awayCheer = latest.supportedSide === "away" ? cheerBadge : "";
+
+    // スコア
     const hasScore = latest.finalHome != null && latest.finalAway != null;
-    const score    = hasScore ? `${latest.finalHome} - ${latest.finalAway}` : "—";
-    const dt       = fmtDateTime(latest.dateTime) || "日付未設定";
-    const meta     = [dt, latest.league].filter(Boolean).join(" · ");
-    const supportedHome = latest.supportedSide === "home";
-    const supportedAway = latest.supportedSide === "away";
-    const supportMarkSvg = `
-      <span class="homeHero-supportMark" aria-hidden="true">
-        <svg class="iconSvg iconSvg--homeAux" viewBox="0 0 24 24" focusable="false">
-          <path d="M12 4.4l2.35 4.76 5.25.77-3.8 3.7.9 5.23L12 16.4l-4.7 2.46.9-5.23-3.8-3.7 5.25-.77z"></path>
-        </svg>
-      </span>`;
-    const homeLabelHtml = `<span class="homeHero-sideLabel${supportedHome ? " homeHero-sideLabel--on" : ""}">${supportedHome ? `${supportMarkSvg} ` : ""}HOME</span>`;
-    const awayLabelHtml = `<span class="homeHero-sideLabel${supportedAway ? " homeHero-sideLabel--on" : ""}">${supportedAway ? `${supportMarkSvg} ` : ""}AWAY</span>`;
-    const resultCat = getResultCategory(latest); // "win"|"loss"|"draw"|"undecided"|""
-    const outcomeMap = { win: "WIN", loss: "LOSE", draw: "DRAW" };
-    const outcomeLabel = (supportedHome || supportedAway) ? (outcomeMap[resultCat] || "") : "";
-    const outcomeHtml = outcomeLabel
-      ? `<div class="homeHero-outcome homeHero-outcome--${resultCat}">${outcomeLabel}</div>`
+    const homeScoreHtml = hasScore ? `<span class="homeHero-score">${latest.finalHome}</span>` : "";
+    const awayScoreHtml = hasScore ? `<span class="homeHero-score">${latest.finalAway}</span>` : "";
+
+    // スコアボード: チーム名＋点数を2行で
+    const scoreboardHtml = `
+      <div class="homeHero-scoreboard">
+        <div class="homeHero-scoreRow">
+          <span class="homeHero-teamName">${esc(homeTeam)}${homeCheer}</span>
+          ${homeScoreHtml}
+        </div>
+        <div class="homeHero-scoreRow">
+          <span class="homeHero-teamName">${esc(awayTeam)}${awayCheer}</span>
+          ${awayScoreHtml}
+        </div>
+      </div>`;
+
+    // 会場・リーグ
+    const contextParts = [latest.venue, latest.league].filter(Boolean);
+    const contextHtml = contextParts.length
+      ? `<div class="homeHero-context">${contextParts.map(p => esc(p)).join(" · ")}</div>`
       : "";
-    const venueHtml = latest.venue
-      ? `<span class="homeHero-venueText"><span class="homeHero-venueIcon" aria-hidden="true"><svg class="iconSvg iconSvg--homeAux" viewBox="0 0 24 24" focusable="false"><path d="M12 20s6-5.38 6-10a6 6 0 10-12 0c0 4.62 6 10 6 10z"></path><circle cx="12" cy="10" r="2.2"></circle></svg></span>${esc(latest.venue)}</span>`
-      : "";
-    const subHtml = venueHtml
-      ? `<div class="homeHero-subRow">${venueHtml}</div>`
-      : "";
+
+    // 主観ブロック: 星評価＋ひとこと
+    const starsHtml = renderStarsDisplay(latest.satisfaction);
+    const noteText = latest.note
+      ? esc(latest.note.slice(0, 60)) + (latest.note.length > 60 ? "…" : "") : "";
+    const subjHtml = (starsHtml || noteText) ? `
+      <div class="homeHero-subjBlock">
+        ${starsHtml ? `<div class="homeHero-satisfaction">${starsHtml}</div>` : ""}
+        ${noteText ? `<div class="homeHero-note">${noteText}</div>` : ""}
+      </div>` : "";
+
+    // 更新日時（補助）
+    const updatedHtml = latest.updatedAt
+      ? `<div class="homeHero-updatedAt">更新: ${esc(fmtDateTime(latest.updatedAt))}</div>` : "";
+
     heroHtml = `
-      <div class="card homeHero">
-        <div class="homeHero-eyebrow">${esc(meta)}</div>
-        <div class="homeHero-arena">
-          <div class="homeHero-side homeHero-side--home">
-            ${homeLabelHtml}
-            <div class="homeHero-teamName">${esc(homeTeam)}</div>
-          </div>
-          <div class="homeHero-scoreShelf">
-            <span class="homeHero-score">${esc(score)}</span>
-          </div>
-          ${outcomeHtml}
-          <div class="homeHero-side homeHero-side--away">
-            ${awayLabelHtml}
-            <div class="homeHero-teamName">${esc(awayTeam)}</div>
-          </div>
+      <div class="card homeHero homeHero--tappable" data-action="detail" data-id="${latest.id}">
+        <div class="homeHero-eyebrow">
+          <span>前回の記録</span>
+          <span class="homeHero-eyebrowDate">${esc(dt)}</span>
         </div>
-        ${subHtml}
-        ${latest.note ? `<div class="homeHero-memo">${esc(latest.note)}</div>` : ""}
+        ${scoreboardHtml}
+        ${contextHtml}
+        ${subjHtml}
+        ${updatedHtml}
         <div class="homeHero-actions">
-          <button class="btn homeHero-btnPrimary homeHero-btn" data-action="detail" data-id="${latest.id}">詳細を見る</button>
-          <button class="homeHero-btnEdit homeHero-btn" data-action="edit" data-id="${latest.id}">追記・編集</button>
+          <button class="btn primary homeHero-ctaPrimary" data-action="edit" data-id="${latest.id}">続きを書く</button>
         </div>
+      </div>`;
+  }
+
+  // ── 検索 / 再到達入口 ──────────────────────────────────────
+  let searchHtml = "";
+  if (records.length > 0) {
+    // 最も多く登場するチーム・会場を最大2件ずつ算出
+    const teamCount = {}, venueCount = {};
+    records.forEach(r => {
+      if (r.homeTeam) teamCount[r.homeTeam] = (teamCount[r.homeTeam] || 0) + 1;
+      if (r.awayTeam) teamCount[r.awayTeam] = (teamCount[r.awayTeam] || 0) + 1;
+      if (r.venue)    venueCount[r.venue]    = (venueCount[r.venue]   || 0) + 1;
+    });
+    const topTeams  = Object.keys(teamCount).sort((a,b) => teamCount[b]-teamCount[a]).slice(0, 2);
+    const topVenues = Object.keys(venueCount).sort((a,b) => venueCount[b]-venueCount[a]).slice(0, 1);
+
+    const chipItems = [
+      ...topTeams.map(t  => ({ type: "team",  val: t, label: t })),
+      ...topVenues.map(v => ({ type: "venue", val: v, label: v })),
+    ];
+    const chipsHtml = chipItems.length
+      ? `<div class="homeChips">${chipItems.map(c =>
+          `<button class="homeChip" data-chip-type="${c.type}" data-chip-val="${esc(c.val)}">${esc(c.label)}</button>`
+        ).join("")}</div>`
+      : "";
+
+    searchHtml = `
+      <div class="homeSearch">
+        <button class="homeSearch-bar" id="btnHomeSearchBar">
+          <svg class="iconSvg homeSearch-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true" stroke-width="2">
+            <circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/>
+          </svg>
+          <span class="homeSearch-placeholder">チーム・会場・メモで探す</span>
+        </button>
+        ${chipsHtml}
       </div>`;
   }
 
@@ -1315,17 +1444,20 @@ function renderHome() {
       </div>
     </div>`;
 
-  // ── 最近の記録（ヒーロー除く直近2〜3件） ──────────────────────
-  // ヒーローに最新1件を表示しているため、リストは2番目以降を最大3件表示する
+  // ── 最近の記録（ヒーロー除く直近3件） ─────────────────────
   const recentRecs = latest ? getRecentRecords(records, 4).slice(1) : [];
   const recentItemsHtml = recentRecs.map(r => {
     const matchup = fmtMatchup(r);
-    const score   = r.finalHome != null && r.finalAway != null ? `${r.finalHome}–${r.finalAway}` : "—";
     const dt      = fmtDateTime(r.dateTime) || "日付未設定";
+    const venue   = r.venue ? ` · ${r.venue}` : "";
+    const noteSnip = r.note
+      ? `<div class="homeRecentItem-note">${esc(r.note.length > 35 ? r.note.slice(0,35) + "…" : r.note)}</div>`
+      : "";
     return `
       <div class="homeRecentItem" data-id="${r.id}">
         <div class="homeRecentItem-main">${esc(matchup)}</div>
-        <div class="homeRecentItem-sub">${esc(dt)} · ${esc(score)}</div>
+        <div class="homeRecentItem-sub">${esc(dt)}${esc(venue)}</div>
+        ${noteSnip}
       </div>`;
   }).join("");
 
@@ -1415,6 +1547,7 @@ function renderHome() {
 
   body.innerHTML = `
     ${heroHtml}
+    ${searchHtml}
     ${summaryHtml}
     ${recentHtml}
     ${bestHtml}
@@ -1425,11 +1558,35 @@ function renderHome() {
   body.querySelectorAll(".homeRecentItem[data-id]").forEach(el => {
     el.addEventListener("click", () => openDetail(el.dataset.id));
   });
-  body.querySelectorAll(".homeHero-btn[data-action]").forEach(btn => {
+
+  // ヒーローカード: カード全体タップ → 詳細 / CTAボタン → 編集
+  body.querySelectorAll(".homeHero--tappable").forEach(card => {
+    card.addEventListener("click", e => {
+      // ボタンクリックはボタン自身のハンドラに任せる
+      if (e.target.closest("button")) return;
+      openDetail(card.dataset.id);
+    });
+  });
+  body.querySelectorAll(".homeHero-ctaPrimary").forEach(btn => {
     btn.addEventListener("click", e => {
       e.stopPropagation();
-      if (btn.dataset.action === "detail") openDetail(btn.dataset.id);
-      else openFormForEdit(btn.dataset.id);
+      openFormForEdit(btn.dataset.id);
+    });
+  });
+
+  // 検索バー → 一覧へ
+  const btnSearchBar = body.querySelector("#btnHomeSearchBar");
+  if (btnSearchBar) btnSearchBar.addEventListener("click", () => { show("list"); setTimeout(() => qEl && qEl.focus(), 80); });
+
+  // 再到達チップ → 一覧にフィルターを適用して遷移
+  body.querySelectorAll(".homeChip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const type = chip.dataset.chipType;
+      const val  = chip.dataset.chipVal;
+      if (type === "team")  filterTeamEl.value  = val;
+      if (type === "venue") filterVenueEl.value = val;
+      show("list");
+      renderList();
     });
   });
 
@@ -2685,3 +2842,6 @@ initQuickFieldNav();
 initQfdDetail();
 initFavoriteTeam();
 initSupportedSideAutoDetect();
+initStarInput("qfStarInput", "qf_satisfaction");
+initStarInput("fStarInput", "f_satisfaction");
+initEditDetailToggle();

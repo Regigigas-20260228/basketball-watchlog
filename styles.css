@@ -1108,7 +1108,7 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 
 /* Hero card */
 .homeHero {
-  padding: 18px 18px 16px;
+  padding: 14px 16px 14px;
   background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
   position: relative;
 }
@@ -1120,109 +1120,69 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 .homeHero-emptyTitle { font-size: 16px; font-weight: 600; }
 .homeHero-emptySub   { font-size: 13px; color: var(--text-muted); }
 
-/* Eyebrow: date · league */
+/* Eyebrow: ラベル + 日付 */
 .homeHero-eyebrow {
+  display: flex; align-items: center; justify-content: space-between;
   font-size: 10px; font-weight: 500;
   letter-spacing: .8px; text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
+.homeHero-eyebrowDate { letter-spacing: 0; text-transform: none; }
 
-/* Arena: matchup structure */
-.homeHero-arena { display: flex; flex-direction: column; margin-bottom: 14px; }
-.homeHero-side  { display: flex; flex-direction: column; gap: 3px; }
-.homeHero-side--home { align-items: flex-start; }
-.homeHero-side--away { align-items: flex-end; }
-.homeHero-sideLabel {
-  font-size: 9px; font-weight: 600;
-  letter-spacing: 1.2px; text-transform: uppercase;
-  color: var(--text-muted); opacity: 0.6;
-}
-.homeHero-sideLabel--on { opacity: 1; color: var(--text-muted); }
-.homeHero-sideLabel .homeHero-supportMark {
-  display: inline-flex; align-items: center; justify-content: center;
-  color: var(--icon-secondary);
-  vertical-align: 1px; letter-spacing: 0;
-}
-.iconSvg--homeAux { width: 11px; height: 11px; stroke-width: 1.9; }
-.homeHero-venueText {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 11px; color: var(--text-muted);
-}
-.homeHero-venueIcon {
-  display: inline-flex; align-items: center; justify-content: center;
-  color: var(--icon-secondary);
+/* Scoreboard: チーム名＋スコア2行 */
+.homeHero-scoreboard { margin-bottom: 8px; }
+.homeHero-scoreRow {
+  display: flex; align-items: baseline;
+  justify-content: space-between; gap: 8px;
+  min-height: 26px;
 }
 .homeHero-teamName {
-  font-size: 15px; font-weight: 700; line-height: 1.25; max-width: 78%;
-}
-.homeHero-side--away .homeHero-teamName { text-align: right; }
-
-/* Score shelf: フェードラインの上にスコアが浮くエフェクト */
-.homeHero-scoreShelf {
-  display: flex; align-items: center;
-  padding: 10px 0;
-}
-.homeHero-scoreShelf::before,
-.homeHero-scoreShelf::after {
-  content: ''; flex: 1; height: 1px;
-}
-.homeHero-scoreShelf::before {
-  background: linear-gradient(90deg, transparent, var(--border));
-  margin-right: 14px;
-}
-.homeHero-scoreShelf::after {
-  background: linear-gradient(90deg, var(--border), transparent);
-  margin-left: 14px;
+  font-size: 15px; font-weight: 700; line-height: 1.3;
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 5px;
 }
 .homeHero-score {
-  font-size: 34px; font-weight: 800;
-  color: var(--color-primary);
-  letter-spacing: 2px; white-space: nowrap; line-height: 1;
-  flex-shrink: 0;
+  font-size: 18px; font-weight: 700; line-height: 1;
+  color: var(--text); flex-shrink: 0; min-width: 28px; text-align: right;
+}
+.homeHero-cheerBadge {
+  font-size: 9px; font-weight: 600; letter-spacing: .4px;
+  color: var(--color-primary); border: 1px solid var(--color-primary);
+  border-radius: 3px; padding: 1px 4px;
+  line-height: 1.4; flex-shrink: 0;
 }
 
-/* Outcome label (WIN / LOSE / DRAW) — score shelf の直下 */
-.homeHero-outcome {
-  text-align: center;
-  font-size: 11px; font-weight: 700;
-  letter-spacing: 2px; text-transform: uppercase;
-  margin: -4px 0 4px;
+/* Context: 会場 · リーグ */
+.homeHero-context {
+  font-size: 12px; color: var(--text-muted);
+  margin-bottom: 10px;
 }
-.homeHero-outcome--win  { color: var(--color-win); }
-.homeHero-outcome--loss { color: var(--color-lose); }
-.homeHero-outcome--draw { color: var(--color-draw); }
 
-/* Sub row: result badge + venue */
-.homeHero-subRow {
-  display: flex; align-items: center;
-  gap: 8px; margin-bottom: 8px; flex-wrap: wrap;
-}
-.homeHero-badge {
-  font-size: 11px; font-weight: 700;
-  padding: 2px 8px; border-radius: 4px; letter-spacing: .3px;
-}
-.homeHero-badge--win       { background: var(--color-win-soft);       color: var(--color-win); }
-.homeHero-badge--loss      { background: var(--color-lose-soft);      color: var(--color-lose); }
-.homeHero-badge--draw      { background: var(--color-draw-soft);      color: var(--color-draw); }
-.homeHero-badge--undecided { background: var(--surface-2); color: var(--text-muted); }
-
-.homeHero-memo {
-  font-size: 13px; color: var(--text); margin: 2px 0 0;
+/* 主観ブロック: 星評価＋ひとこと */
+.homeHero-subjBlock { margin-bottom: 6px; }
+.homeHero-satisfaction { margin-bottom: 4px; }
+.homeHero-note {
+  font-size: 13px; line-height: 1.5; color: var(--text-muted);
   display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
-  -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* Card-as-link: whole card tappable */
+.homeHero--tappable { cursor: pointer; }
+.homeHero--tappable:active { opacity: .9; }
+
+/* 更新日時: 補助情報 */
+.homeHero-updatedAt {
+  font-size: 10px; color: var(--text-muted);
+  text-align: right; margin-top: 6px;
 }
 
 /* Actions */
-.homeHero-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
-.homeHero-btnPrimary {
-  flex: 1; justify-content: center;
-  background: transparent; box-shadow: none;
-  border-color: var(--button-secondary-border); color: var(--button-secondary-text);
-  font-size: 13px; padding: 9px 12px;
-}
-.homeHero-btnPrimary:hover { background: var(--color-secondary-soft); border-color: var(--button-secondary-text); }
-.homeHero-btnEdit {
+.homeHero-actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.homeHero-ctaPrimary { flex: 1; justify-content: center; font-size: 14px; padding: 10px; }
+.homeHero-btnSub {
   -webkit-appearance: none; appearance: none;
   background: none; border: none; box-shadow: none;
   font-size: 12px; color: var(--text-muted);
@@ -1230,7 +1190,83 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   font-family: inherit; font-weight: 500;
   white-space: nowrap; flex-shrink: 0;
 }
-.homeHero-btnEdit:hover { color: var(--text); }
+.homeHero-btnSub:hover { color: var(--text); }
+
+/* ===== Star display (hero card) ===== */
+.starDisplay { display: inline-flex; gap: 3px; }
+.starDisplay-star { font-size: 22px; color: var(--border); }
+.starDisplay-star--on   { color: var(--team-primary, var(--color-primary)); }
+.starDisplay-star--half {
+  background: linear-gradient(90deg, var(--team-primary, var(--color-primary)) 50%, var(--border) 50%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== Star input (form) ===== */
+.starInput { display: flex; gap: 2px; padding: 4px 0; }
+.starInput-star {
+  -webkit-appearance: none; appearance: none;
+  background: none; border: none; padding: 3px 4px;
+  font-size: 28px; cursor: pointer; line-height: 1;
+  color: var(--border); font-family: inherit;
+  transition: color .1s, transform .1s;
+  /* 左半分と右半分でタップ領域を分けるために最小幅を明示 */
+  min-width: 36px;
+}
+.starInput-star--on   { color: var(--team-primary, var(--color-primary)); }
+.starInput-star--half {
+  background: linear-gradient(90deg,
+    var(--team-primary, var(--color-primary)) 50%,
+    var(--border) 50%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.starInput-star:hover { transform: scale(1.12); }
+
+/* ===== Edit form sticky save footer ===== */
+/* ===== Edit form: full-screen sheet (same as quickEntryOverlay) ===== */
+#viewForm {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+}
+#viewForm.hide { display: none !important; }
+.viewFormSheet {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  flex: 1;
+}
+
+/* ===== Search / 再到達入口 ===== */
+.homeSearch { display: flex; flex-direction: column; gap: 10px; }
+.homeSearch-bar {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); cursor: pointer; text-align: left;
+  font-family: inherit;
+  transition: border-color .15s;
+}
+.homeSearch-bar:hover { border-color: var(--text-muted); }
+.homeSearch-icon { width: 16px; height: 16px; flex-shrink: 0; color: var(--icon-default); }
+.homeSearch-placeholder {
+  font-size: 14px; color: var(--text-muted); flex: 1;
+}
+
+/* 再到達チップ */
+.homeChips { display: flex; flex-wrap: wrap; gap: 8px; }
+.homeChip {
+  -webkit-appearance: none; appearance: none;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 12px;
+  font-size: 12px; font-weight: 500; color: var(--text);
+  font-family: inherit; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.homeChip:hover  { background: var(--surface-2); border-color: var(--text-muted); }
+.homeChip:active { opacity: .7; }
 
 /* Summary 2×2 */
 .homeSummaryGrid {
@@ -1269,6 +1305,7 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 .homeRecentItem:active     { opacity: .6; }
 .homeRecentItem-main { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
 .homeRecentItem-sub  { font-size: 12px; color: var(--text-muted); }
+.homeRecentItem-note { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-style: italic; }
 
 /* Empty block */
 .homeEmptyBlock { padding: 2px 0 8px; }
