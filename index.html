@@ -311,20 +311,67 @@
 
   <!-- BEST -->
   <section id="viewBest" class="hide">
+    <div id="bestBody" class="view-stack"></div>
+  </section>
+
+  <!-- BEST DETAIL -->
+  <section id="viewBestDetail" class="hide">
+    <div class="card">
+      <div class="detailHd">
+        <button class="btn ghost" id="btnBestDetailBack">← 戻る</button>
+        <div class="detailHd-actions">
+          <button class="btn ghost" id="btnBestDetailEdit">編集</button>
+          <button class="btn ghost-danger" id="btnBestDetailDelete">削除</button>
+        </div>
+      </div>
+      <div id="bestDetailBody" class="bd bd--flush"></div>
+    </div>
+  </section>
+
+  <!-- BEST EDIT -->
+  <section id="viewBestEdit" class="hide">
     <div class="view-stack">
       <div class="card">
         <div class="hd">
           <div class="title">
-            <h2>マイベスト</h2>
-            <div class="meta">自分なりのランキングやお気に入りをまとめる</div>
+            <h2 id="bestEditHeading">ランキングを作る</h2>
+          </div>
+          <div class="right">
+            <button class="btn" id="btnBestEditCancel">キャンセル</button>
+            <button class="btn primary" id="btnBestEditSave">保存</button>
           </div>
         </div>
-        <div class="bd">
-          <p style="color:var(--text-muted); font-size:14px; line-height:1.8; margin:0">
-            観戦した試合の中から、自分なりのベスト試合・ベストチームを選んでまとめられるようにします。
-          </p>
-          <p style="color:var(--text-muted); font-size:12px; margin:12px 0 0; opacity:.7">現在は準備中です</p>
+        <div class="bd" style="padding:0">
+          <div class="quickFieldRow">
+            <span class="quickFieldLabel">ランキング名</span>
+            <input id="bestEditName" type="text" placeholder="例：ベスト試合 2025" autocomplete="off" />
+          </div>
+          <!-- テンプレートチップ -->
+          <div id="bestEditTitleChips" class="bestEditTitleChips"></div>
         </div>
+      </div>
+      <!-- ランク入り試合 -->
+      <div class="card">
+        <div class="hd">
+          <div class="title">
+            <h2>ランク入り試合</h2>
+            <div class="meta">上下ボタンで順位を変更できます</div>
+          </div>
+        </div>
+        <div id="bestEditEntries" class="bd" style="padding:0 0 8px"></div>
+      </div>
+      <!-- インライン試合ピッカー -->
+      <div class="card" style="padding:0">
+        <div class="hd" style="padding:12px 16px 10px">
+          <div class="title">
+            <h2>試合を選ぶ</h2>
+            <div class="meta">タップしてランキングに追加</div>
+          </div>
+        </div>
+        <div class="bestInlinePickerSearch">
+          <input id="bestInlineQ" type="search" placeholder="チーム・会場・リーグで絞り込む" autocomplete="off" />
+        </div>
+        <div id="bestInlineList" class="bestInlineList"></div>
       </div>
     </div>
   </section>
@@ -565,6 +612,20 @@
       <button class="btn" id="btnQuickCancelFooter">キャンセル</button>
       <button class="btn primary quickEntryFooter-save" id="btnQuickSave">保存する</button>
     </div>
+  </div>
+</div>
+
+<!-- ===== Best Match Picker ===== -->
+<div id="bestPickerOverlay" class="bestPickerOverlay hide">
+  <div class="bestPickerSheet">
+    <div class="bestPickerHeader">
+      <h2 class="bestPickerHeader-title">試合を選ぶ</h2>
+      <button class="bestPickerClose" id="btnBestPickerClose" aria-label="閉じる">✕</button>
+    </div>
+    <div class="bestPickerSearch">
+      <input id="bestPickerQ" type="search" placeholder="チーム・会場で絞り込む" autocomplete="off" />
+    </div>
+    <div id="bestPickerList" class="bestPickerList"></div>
   </div>
 </div>
 

@@ -1275,3 +1275,258 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   font-size: 13px; color: var(--text);
   padding: 10px 12px; background: var(--surface-2); border-radius: 10px; line-height: 1.5;
 }
+
+/* =====================================================================
+   MyBest – ランキング一覧 / 詳細 / 編集 / ピッカー
+   ===================================================================== */
+
+/* --- 一覧 プレビューカード --- */
+.bestRankingCard-preview { padding: 0 16px 4px; }
+.bestPreviewItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.bestPreviewItem:last-child { border-bottom: none; }
+.bestPreviewItem-rank {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--team-primary-soft); color: var(--team-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.bestPreviewItem-rank--gold { background: #FFF0C8; color: #B8860B; }
+.bestPreviewItem-info { flex: 1; min-width: 0; }
+.bestPreviewItem-matchup {
+  font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bestPreviewItem-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.bestRankingCard-actions {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 8px 16px 12px; border-top: 1px solid var(--border);
+}
+
+/* --- 一覧 空状態 --- */
+.bestListEmpty {
+  text-align: center; padding: 28px 16px 20px;
+  color: var(--text-muted); font-size: 14px; line-height: 1.7;
+}
+.bestListEmpty p { margin: 0 0 6px; }
+.bestListEmpty-create {
+  display: inline-block; margin-top: 10px;
+  color: var(--team-primary); font-size: 14px; font-weight: 600;
+  background: none; border: none; cursor: pointer; font-family: inherit; padding: 0;
+}
+
+/* --- ランキング詳細 --- */
+.bestDetailTitle {
+  font-size: 18px; font-weight: 700;
+  padding: 16px 16px 4px; color: var(--text);
+}
+.bestDetailMeta { font-size: 12px; color: var(--text-muted); padding: 0 16px 12px; }
+.bestDetailList  { padding: 0 16px 12px; }
+.bestDetailItem {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.bestDetailItem:last-child { border-bottom: none; }
+.bestDetailItem-rank {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  background: var(--team-primary-soft); color: var(--team-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+.bestDetailItem-rank--1st { background: #FFF0C8; color: #B8860B; }
+.bestDetailItem-rank--2nd { background: #ECECEC; color: #555; }
+.bestDetailItem-rank--3rd { background: #FFE8D6; color: #8B4513; }
+.bestDetailItem-info { flex: 1; min-width: 0; }
+.bestDetailItem-matchup { font-size: 14px; font-weight: 600; }
+.bestDetailItem-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.bestDetailItem-comment {
+  font-size: 12px; color: var(--text-muted); margin-top: 4px; font-style: italic;
+}
+
+/* --- ランキング編集 --- */
+.bestEditEntry {
+  display: flex; flex-direction: column;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+}
+.bestEditEntry:last-child { border-bottom: none; }
+.bestEditEntry-top {
+  display: flex; align-items: center; gap: 10px;
+}
+.bestEditEntry-rank {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: var(--team-primary-soft); color: var(--team-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.bestEditEntry-info { flex: 1; min-width: 0; }
+.bestEditEntry-matchup {
+  font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bestEditEntry-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* アクションボタン群 — タップしやすいサイズ */
+.bestEditEntry-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.bestEntry-move {
+  padding: 6px 10px; font-size: 14px; min-width: 38px; line-height: 1;
+}
+.bestEntry-move:disabled { opacity: .25 !important; pointer-events: none; }
+.bestEditEntry-actions .btn.ghost-danger { padding: 6px 10px; font-size: 12px; }
+
+/* コメント入力行 — rank円の幅ぶんインデント */
+.bestEditEntry-comment { margin-top: 8px; padding-left: 36px; }
+.bestEntry-commentInput {
+  width: 100%; box-sizing: border-box;
+  border: none; border-bottom: 1px solid var(--border);
+  background: transparent; color: var(--text);
+  font-family: inherit; font-size: 13px; padding: 4px 0;
+  outline: none; transition: border-color .15s;
+}
+.bestEntry-commentInput:focus { border-bottom-color: var(--team-primary); }
+.bestEntry-commentInput::placeholder { color: var(--text-muted); }
+
+.bestEditEmpty {
+  padding: 20px 16px; text-align: center;
+  color: var(--text-muted); font-size: 13px; line-height: 1.6;
+}
+
+/* --- ランキング名テンプレートチップ --- */
+.bestEditTitleChips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 8px 16px 14px;
+}
+.bestEditTitleChip {
+  display: inline-flex; align-items: center;
+  padding: 5px 12px; border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text-muted);
+  font-size: 12px; font-family: inherit;
+  cursor: pointer; white-space: nowrap;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.bestEditTitleChip:hover,
+.bestEditTitleChip:active {
+  background: var(--team-primary-soft);
+  color: var(--team-primary);
+  border-color: var(--team-primary);
+}
+
+/* --- インライン試合ピッカー --- */
+.bestInlinePickerSearch {
+  padding: 0 16px 10px; border-bottom: 1px solid var(--border);
+}
+.bestInlinePickerSearch input {
+  width: 100%; box-sizing: border-box;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 8px 12px; font-size: 14px;
+  background: var(--bg); color: var(--text); font-family: inherit;
+}
+.bestInlinePickerSearch input:focus {
+  outline: none; border-color: var(--team-primary);
+}
+.bestInlineList { padding: 4px 0; }
+.bestInlineItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; border-bottom: 1px solid var(--border);
+  transition: background .12s;
+}
+.bestInlineItem:last-child { border-bottom: none; }
+.bestInlineItem-info { flex: 1; min-width: 0; }
+.bestInlineItem-matchup {
+  font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bestInlineItem-sub {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--text-muted); margin-top: 3px;
+}
+/* 追加ボタン */
+.bestInlineItem-addBtn {
+  padding: 5px 12px; font-size: 12px; flex-shrink: 0;
+  border-radius: var(--radius-pill); white-space: nowrap;
+}
+/* 追加済み状態 */
+.bestInlineItem--added {
+  background: var(--surface-2);
+}
+.bestInlineItem--added .bestInlineItem-matchup { color: var(--text-muted); }
+.bestInlineItem--added .bestInlineItem-addBtn {
+  background: transparent; color: var(--text-muted);
+  border-color: var(--border); pointer-events: none; opacity: .6;
+}
+/* 試合なし */
+.bestInlineEmpty {
+  padding: 20px 16px; text-align: center;
+  color: var(--text-muted); font-size: 13px;
+}
+
+/* --- ホーム マイベストプレビュー --- */
+.bestHomePreview-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
+  color: var(--text-muted); padding: 2px 0 8px;
+}
+.bestHomePreview-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 2px 0 4px; cursor: pointer;
+}
+.bestHomePreview-rank {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  background: #FFF0C8; color: #B8860B;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; margin-top: 2px;
+}
+.bestHomePreview-info { flex: 1; min-width: 0; }
+.bestHomePreview-matchup { font-size: 14px; font-weight: 600; line-height: 1.35; }
+.bestHomePreview-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.bestHomePreview-comment {
+  font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 3px;
+}
+.bestHomePreview-more {
+  font-size: 12px; color: var(--text-muted); padding: 6px 0 0;
+}
+
+/* --- 試合ピッカー Overlay --- */
+.bestPickerOverlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 30; display: flex; align-items: flex-end; justify-content: center;
+}
+.bestPickerOverlay.hide { display: none !important; }
+.bestPickerSheet {
+  width: 100%; max-width: var(--w); max-height: 80vh;
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.bestPickerHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.bestPickerHeader-title { font-size: 16px; font-weight: 700; margin: 0; }
+.bestPickerClose {
+  background: none; border: none; font-size: 18px; line-height: 1;
+  color: var(--text-muted); cursor: pointer; padding: 4px 8px;
+}
+.bestPickerSearch {
+  padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.bestPickerSearch input {
+  width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 8px 12px; font-size: 14px; background: var(--bg); color: var(--text);
+  box-sizing: border-box; font-family: inherit;
+}
+.bestPickerList { flex: 1; overflow-y: auto; padding: 6px 0; }
+.bestPickerItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
+  transition: background .12s;
+}
+.bestPickerItem:last-child { border-bottom: none; }
+.bestPickerItem:active { background: var(--surface-2); }
+.bestPickerItem--added { opacity: .4; pointer-events: none; }
+.bestPickerItem-info { flex: 1; min-width: 0; }
+.bestPickerItem-matchup { font-size: 14px; font-weight: 600; }
+.bestPickerItem-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.bestPickerItem-badge {
+  font-size: 11px; padding: 3px 9px; border-radius: var(--radius-pill); flex-shrink: 0;
+}

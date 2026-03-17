@@ -4,6 +4,18 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ===== Storage =====
 const STORAGE_KEY = "bb_watchlog_v1";
+const BEST_STORAGE_KEY = "bb_mybest_v1";
+
+function loadBestRankings() {
+  try {
+    const raw = localStorage.getItem(BEST_STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : [];
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
+}
+function saveBestRankings(arr) {
+  localStorage.setItem(BEST_STORAGE_KEY, JSON.stringify(arr));
+}
 
 function loadRecords() {
   try {
@@ -47,9 +59,11 @@ const viewDetail = document.getElementById("viewDetail");
 const viewForm = document.getElementById("viewForm");
 const viewQuickForm = document.getElementById("viewQuickForm");
 const viewHome = document.getElementById("viewHome");
-const viewBest = document.getElementById("viewBest");
-const viewStats = document.getElementById("viewStats");
-const viewAccount = document.getElementById("viewAccount");
+const viewBest       = document.getElementById("viewBest");
+const viewBestDetail = document.getElementById("viewBestDetail");
+const viewBestEdit   = document.getElementById("viewBestEdit");
+const viewStats      = document.getElementById("viewStats");
+const viewAccount    = document.getElementById("viewAccount");
 
 const listEl = document.getElementById("list");
 const emptyEl = document.getElementById("empty");
@@ -147,6 +161,22 @@ document.getElementById("btnQuickSave").addEventListener("click", () => onQuickS
 
 // buttons
 document.getElementById("btnBack").addEventListener("click", () => show("home"));
+
+// MyBest ボタン
+document.getElementById("btnBestDetailBack").addEventListener("click", () => show("best"));
+document.getElementById("btnBestDetailEdit").addEventListener("click", () => openBestEdit(currentBestId));
+document.getElementById("btnBestDetailDelete").addEventListener("click", () => deleteBestRanking(currentBestId));
+document.getElementById("btnBestEditCancel").addEventListener("click", () => {
+  if (currentBestId) openBestDetail(currentBestId); else show("best");
+});
+document.getElementById("btnBestEditSave").addEventListener("click", () => saveBestEdits());
+// btnBestEditAddMatch は HTML から削除済み。念のためヌルセーフ
+const _bestAddBtn = document.getElementById("btnBestEditAddMatch");
+if (_bestAddBtn) _bestAddBtn.addEventListener("click", () => openBestPicker());
+document.getElementById("btnBestPickerClose").addEventListener("click", () => closeBestPicker());
+document.getElementById("bestPickerQ").addEventListener("input", e => renderBestPickerList(e.target.value));
+// インライン試合ピッカーの検索
+document.getElementById("bestInlineQ").addEventListener("input", e => renderBestInlinePicker(e.target.value));
 document.getElementById("btnCancel").addEventListener("click", () => show("list"));
 document.getElementById("btnSave").addEventListener("click", () => onSave().catch(console.error));
 document.getElementById("btnEdit").addEventListener("click", () => openFormForEdit(currentId));
@@ -297,6 +327,11 @@ let currentId = null;
 let qfSupportedSideManuallySet = false;
 let fSupportedSideManuallySet  = false;
 
+// MyBest
+let bestRankings   = [];
+let currentBestId  = null;
+let bestEditEntries = []; // [{matchId, comment}] 編集中エントリ
+
 // ===== Routing-ish =====
 function show(which){
   viewHome.classList.toggle("hide", which !== "home");
@@ -305,18 +340,25 @@ function show(which){
   viewForm.classList.toggle("hide", which !== "form");
   viewQuickForm.classList.toggle("hide", which !== "quickForm");
   viewBest.classList.toggle("hide", which !== "best");
+  viewBestDetail.classList.toggle("hide", which !== "bestDetail");
+  viewBestEdit.classList.toggle("hide", which !== "bestEdit");
   viewStats.classList.toggle("hide", which !== "stats");
   viewAccount.classList.toggle("hide", which !== "account");
-  if (which === "home")  renderHome();
-  if (which === "list")  renderList();
-  if (which === "stats") renderStats();
+  if (which === "home")       renderHome();
+  if (which === "list")       renderList();
+  if (which === "best")       renderBest();
+  if (which === "stats")      renderStats();
 
-  // 入力モード（クイック記録 / 詳細フォーム）中はボトムナビを隠す
-  const inputModes = ["form", "quickForm"];
+  // 入力モード（クイック記録 / 詳細フォーム / ランキング編集）中はボトムナビを隠す
+  const inputModes = ["form", "quickForm", "bestEdit"];
   bottomDock.classList.toggle("hide", inputModes.includes(which));
 
   // list・detail はホーム配下のサブ画面として扱う
-  const navMap = { home: "btnNavHome", list: "btnNavHome", detail: "btnNavHome", best: "btnNavBest", stats: "btnNavReview", account: "btnNavAccount" };
+  const navMap = {
+    home: "btnNavHome", list: "btnNavHome", detail: "btnNavHome",
+    best: "btnNavBest", bestDetail: "btnNavBest", bestEdit: "btnNavBest",
+    stats: "btnNavReview", account: "btnNavAccount"
+  };
   setNavActive(navMap[which] || null);
 }
 
@@ -1298,19 +1340,62 @@ function renderHome() {
     </div>`;
 
   // ── マイベスト ────────────────────────────────────────────────
-  const bestHtml = `
-    <div class="card" style="padding:0">
-      <div class="sectionCard__header">
-        <span class="homeSectionHd-title">マイベスト</span>
-        <button class="homeSectionHd-more" id="btnHomeViewBest">もっと見る →</button>
-      </div>
-      <div class="sectionCard__body">
-        <div class="homeEmptyBlock">
-          <p class="homeEmptyBlock-note">まだマイベストがありません</p>
-          <button class="homeEmptyBlock-create" id="btnHomeBestCreate">最初のランキングを作る →</button>
+  let bestHtml;
+  if (bestRankings.length === 0) {
+    bestHtml = `
+      <div class="card" style="padding:0">
+        <div class="sectionCard__header">
+          <span class="homeSectionHd-title">マイベスト</span>
+          <button class="homeSectionHd-more" id="btnHomeViewBest">もっと見る →</button>
         </div>
-      </div>
-    </div>`;
+        <div class="sectionCard__body">
+          <div class="homeEmptyBlock">
+            <p class="homeEmptyBlock-note">まだマイベストがありません</p>
+            <button class="homeEmptyBlock-create" id="btnHomeBestCreate">最初のランキングを作る →</button>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    const topRanking = bestRankings[0];
+    const firstEntry = topRanking.entries[0];
+    const firstMatch = firstEntry ? records.find(r => r.id === firstEntry.matchId) : null;
+    let previewBodyHtml;
+    if (!firstMatch) {
+      previewBodyHtml = `<div class="homeEmptyBlock"><p class="homeEmptyBlock-note">試合がまだ登録されていません</p></div>`;
+    } else {
+      const matchup = fmtMatchup(firstMatch);
+      const dt = fmtDateTime(firstMatch.dateTime) || "";
+      const score = firstMatch.finalHome != null && firstMatch.finalAway != null
+        ? `${firstMatch.finalHome}–${firstMatch.finalAway}` : "—";
+      const sub = [dt, score].filter(Boolean).join(" · ");
+      const commentHtml = firstEntry.comment
+        ? `<div class="bestHomePreview-comment">"${esc(firstEntry.comment)}"</div>` : "";
+      const remaining = topRanking.entries.length - 1;
+      const moreHtml = remaining > 0
+        ? `<div class="bestHomePreview-more">他 ${remaining} 試合も登録中</div>` : "";
+      previewBodyHtml = `
+        <div class="bestHomePreview-item" data-id="${firstMatch.id}">
+          <div class="bestHomePreview-rank">1</div>
+          <div class="bestHomePreview-info">
+            <div class="bestHomePreview-matchup">${esc(matchup)}</div>
+            ${sub ? `<div class="bestHomePreview-sub">${esc(sub)}</div>` : ""}
+            ${commentHtml}
+          </div>
+        </div>
+        ${moreHtml}`;
+    }
+    bestHtml = `
+      <div class="card" style="padding:0">
+        <div class="sectionCard__header">
+          <span class="homeSectionHd-title">マイベスト</span>
+          <button class="homeSectionHd-more" id="btnHomeViewBest">もっと見る →</button>
+        </div>
+        <div class="sectionCard__body">
+          <div class="bestHomePreview-title">${esc(topRanking.title || "ランキング")}</div>
+          ${previewBodyHtml}
+        </div>
+      </div>`;
+  }
 
   // ── 振り返りハイライト ──────────────────────────────────────
   const highlights = buildHighlights(records);
@@ -1357,10 +1442,420 @@ function renderHome() {
   if (btnViewBest) btnViewBest.addEventListener("click", () => { show("best"); setNavActive("btnNavBest"); });
 
   const btnBestCreate = body.querySelector("#btnHomeBestCreate");
-  if (btnBestCreate) btnBestCreate.addEventListener("click", () => { show("best"); setNavActive("btnNavBest"); });
+  if (btnBestCreate) btnBestCreate.addEventListener("click", () => openBestEdit(null));
+
+  body.querySelectorAll(".bestHomePreview-item[data-id]").forEach(el => {
+    el.addEventListener("click", () => openDetail(el.dataset.id));
+  });
 
   const btnViewStats = body.querySelector("#btnHomeViewStats");
   if (btnViewStats) btnViewStats.addEventListener("click", () => { show("stats"); setNavActive("btnNavReview"); });
+}
+
+// ===== MyBest =====
+
+const BEST_TITLE_TEMPLATES = [
+  "ベスト試合",
+  "現地で一番痺れた試合",
+  "もう一度見たい試合",
+  "また行きたい試合",
+  "最高の逆転劇",
+];
+
+function renderBestTitleChips() {
+  const container = document.getElementById("bestEditTitleChips");
+  const input     = document.getElementById("bestEditName");
+  if (!container || !input) return;
+  container.innerHTML = BEST_TITLE_TEMPLATES.map(tmpl =>
+    `<button type="button" class="bestEditTitleChip" data-tmpl="${esc(tmpl)}">${esc(tmpl)}</button>`
+  ).join("");
+  container.querySelectorAll(".bestEditTitleChip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      input.value = btn.dataset.tmpl;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    });
+  });
+}
+
+// デフォルト表示件数
+const BEST_INLINE_DEFAULT_LIMIT = 8;
+
+function renderBestInlinePicker(query) {
+  const container = document.getElementById("bestInlineList");
+  if (!container) return;
+
+  const addedIds = new Set(bestEditEntries.map(e => e.matchId));
+  const q = (query || "").trim().toLowerCase();
+
+  // 直近更新順でソートし、検索なし時は上位 BEST_INLINE_DEFAULT_LIMIT 件だけ表示
+  let pool = [...records].sort((a, b) =>
+    (b.dateTime || b.updatedAt || "").localeCompare(a.dateTime || a.updatedAt || "")
+  );
+  if (q) {
+    pool = pool.filter(r => {
+      const blob = [r.homeTeam, r.awayTeam, r.venue, r.league].join(" ").toLowerCase();
+      return blob.includes(q);
+    });
+  } else {
+    pool = pool.slice(0, BEST_INLINE_DEFAULT_LIMIT);
+  }
+
+  if (pool.length === 0) {
+    container.innerHTML = `<p class="bestInlineEmpty">${records.length === 0
+      ? "試合記録がまだありません" : "一致する試合が見つかりません"}</p>`;
+    return;
+  }
+
+  container.innerHTML = pool.map(r => {
+    const matchup = fmtMatchup(r);
+    const dt      = fmtDateTime(r.dateTime) || "日付未設定";
+    const score   = r.finalHome != null && r.finalAway != null
+      ? `${r.finalHome}–${r.finalAway}` : "—";
+    const res     = getResultCategory(r);
+    const dot     = res === "win" ? "win" : res === "loss" ? "lose" : "draw";
+    const added   = addedIds.has(r.id);
+    return `
+      <div class="bestInlineItem${added ? " bestInlineItem--added" : ""}" data-id="${r.id}">
+        <div class="bestInlineItem-info">
+          <div class="bestInlineItem-matchup">${esc(matchup)}</div>
+          <div class="bestInlineItem-sub">
+            <span class="dot ${dot}"></span>
+            <span>${esc(dt)}</span>
+            <span>·</span>
+            <span>${esc(score)}</span>
+          </div>
+        </div>
+        <button class="btn bestInlineItem-addBtn primary" data-id="${r.id}" ${added ? "disabled" : ""}>
+          ${added ? "追加済" : "追加"}
+        </button>
+      </div>`;
+  }).join("");
+
+  container.querySelectorAll(".bestInlineItem-addBtn:not([disabled])").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      if (!bestEditEntries.some(e => e.matchId === id)) {
+        bestEditEntries.push({ matchId: id, comment: "" });
+        renderBestEditEntries();   // entries 更新 → 内部で inline も refresh される
+      }
+    });
+  });
+}
+
+function renderBest() {
+  const body = document.getElementById("bestBody");
+  if (!body) return;
+
+  if (bestRankings.length === 0) {
+    body.innerHTML = `
+      <div class="card">
+        <div class="hd">
+          <div class="title">
+            <h2>マイベスト</h2>
+            <div class="meta">自分だけのベスト試合ランキングを作る</div>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="bestListEmpty">
+            <p>まだランキングがありません</p>
+            <p style="font-size:13px">観戦記録の中から好きな試合を選んで<br>自分だけのランキングを作れます</p>
+            <button class="bestListEmpty-create" id="btnBestNew">最初のランキングを作る →</button>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    const cardsHtml = bestRankings.map(ranking => {
+      const previewEntries = ranking.entries.slice(0, 3);
+      const previewHtml = previewEntries.length === 0
+        ? `<p style="color:var(--text-muted);font-size:13px;padding:8px 0">試合未登録</p>`
+        : previewEntries.map((entry, i) => {
+            const match = records.find(r => r.id === entry.matchId);
+            if (!match) return "";
+            const matchup = fmtMatchup(match);
+            const dt = fmtDateTime(match.dateTime) || "日付未設定";
+            const score = (match.finalHome != null && match.finalAway != null) ? `${match.finalHome}–${match.finalAway}` : "—";
+            const rankClass = i === 0 ? " bestPreviewItem-rank--gold" : "";
+            return `
+              <div class="bestPreviewItem" data-id="${match.id}">
+                <div class="bestPreviewItem-rank${rankClass}">${i + 1}</div>
+                <div class="bestPreviewItem-info">
+                  <div class="bestPreviewItem-matchup">${esc(matchup)}</div>
+                  <div class="bestPreviewItem-sub">${esc(dt)} · ${esc(score)}</div>
+                </div>
+              </div>`;
+          }).join("");
+
+      return `
+        <div class="card" style="padding:0">
+          <div class="hd" style="padding:12px 16px 8px">
+            <div class="title">
+              <h2 style="font-size:16px">${esc(ranking.title || "無題のランキング")}</h2>
+              <div class="meta">${ranking.entries.length}試合</div>
+            </div>
+          </div>
+          <div class="bestRankingCard-preview">${previewHtml}</div>
+          <div class="bestRankingCard-actions">
+            <button class="btn ghost bestEdit-btn" data-best-id="${ranking.id}">編集</button>
+            <button class="btn primary bestDetail-btn" data-best-id="${ranking.id}">詳細を見る</button>
+          </div>
+        </div>`;
+    }).join("");
+
+    body.innerHTML = `
+      <div class="card">
+        <div class="hd">
+          <div class="title">
+            <h2>マイベスト</h2>
+            <div class="meta">${bestRankings.length}件のランキング</div>
+          </div>
+          <div class="right">
+            <button class="btn primary" id="btnBestNew">＋ 新規作成</button>
+          </div>
+        </div>
+      </div>
+      ${cardsHtml}`;
+  }
+
+  // イベント配線
+  const btnNew = body.querySelector("#btnBestNew");
+  if (btnNew) btnNew.addEventListener("click", () => openBestEdit(null));
+
+  body.querySelectorAll(".bestDetail-btn[data-best-id]").forEach(btn => {
+    btn.addEventListener("click", () => openBestDetail(btn.dataset.bestId));
+  });
+  body.querySelectorAll(".bestEdit-btn[data-best-id]").forEach(btn => {
+    btn.addEventListener("click", () => openBestEdit(btn.dataset.bestId));
+  });
+  body.querySelectorAll(".bestPreviewItem[data-id]").forEach(el => {
+    el.addEventListener("click", () => openDetail(el.dataset.id));
+  });
+}
+
+function openBestDetail(id) {
+  const ranking = bestRankings.find(r => r.id === id);
+  if (!ranking) return;
+  currentBestId = id;
+
+  const body = document.getElementById("bestDetailBody");
+  const itemsHtml = ranking.entries.length === 0
+    ? `<p style="color:var(--text-muted);padding:16px;font-size:14px">試合がまだ登録されていません</p>`
+    : ranking.entries.map((entry, i) => {
+        const match = records.find(r => r.id === entry.matchId);
+        if (!match) return "";
+        const matchup = fmtMatchup(match);
+        const dt = fmtDateTime(match.dateTime) || "日付未設定";
+        const score = (match.finalHome != null && match.finalAway != null) ? `${match.finalHome}–${match.finalAway}` : "—";
+        const rankClass = i === 0 ? " bestDetailItem-rank--1st" : i === 1 ? " bestDetailItem-rank--2nd" : i === 2 ? " bestDetailItem-rank--3rd" : "";
+        const commentHtml = entry.comment ? `<div class="bestDetailItem-comment">"${esc(entry.comment)}"</div>` : "";
+        return `
+          <div class="bestDetailItem" data-match-id="${match.id}">
+            <div class="bestDetailItem-rank${rankClass}">${i + 1}</div>
+            <div class="bestDetailItem-info">
+              <div class="bestDetailItem-matchup">${esc(matchup)}</div>
+              <div class="bestDetailItem-sub">${esc(dt)} · ${esc(score)}</div>
+              ${commentHtml}
+            </div>
+          </div>`;
+      }).join("");
+
+  body.innerHTML = `
+    <div class="bestDetailTitle">${esc(ranking.title || "無題のランキング")}</div>
+    <div class="bestDetailMeta">${ranking.entries.length}試合 · 更新: ${fmtDateTime(ranking.updatedAt) || "—"}</div>
+    <div class="bestDetailList">${itemsHtml}</div>
+  `;
+
+  body.querySelectorAll(".bestDetailItem[data-match-id]").forEach(el => {
+    el.addEventListener("click", () => openDetail(el.dataset.matchId));
+  });
+
+  show("bestDetail");
+}
+
+function openBestEdit(id) {
+  currentBestId = id;
+  const ranking = id ? bestRankings.find(r => r.id === id) : null;
+  document.getElementById("bestEditHeading").textContent = ranking ? "ランキングを編集" : "ランキングを作る";
+  document.getElementById("bestEditName").value = ranking ? (ranking.title || "") : "";
+  // 検索欄をリセット
+  const inlineQ = document.getElementById("bestInlineQ");
+  if (inlineQ) inlineQ.value = "";
+  bestEditEntries = ranking ? ranking.entries.map(e => ({ ...e })) : [];
+  renderBestTitleChips();
+  renderBestEditEntries();   // entries 更新 → 内部で inline も refresh される
+  show("bestEdit");
+}
+
+function renderBestEditEntries() {
+  const container = document.getElementById("bestEditEntries");
+  if (!container) return;
+
+  if (bestEditEntries.length === 0) {
+    container.innerHTML = `<div class="bestEditEmpty">まだ試合が追加されていません<br>下の「試合を選ぶ」から追加してください</div>`;
+  } else {
+    container.innerHTML = bestEditEntries.map((entry, i) => {
+      const match = records.find(r => r.id === entry.matchId);
+      const matchup = match ? fmtMatchup(match) : "（削除された試合）";
+      const dt = match ? (fmtDateTime(match.dateTime) || "日付未設定") : "";
+      const score = match && match.finalHome != null && match.finalAway != null
+        ? `${match.finalHome}–${match.finalAway}` : "—";
+      const sub = match ? `${dt} · ${score}` : "";
+      const canUp   = i > 0;
+      const canDown = i < bestEditEntries.length - 1;
+      const comment = esc(entry.comment || "");
+      return `
+        <div class="bestEditEntry">
+          <div class="bestEditEntry-top">
+            <div class="bestEditEntry-rank">${i + 1}</div>
+            <div class="bestEditEntry-info">
+              <div class="bestEditEntry-matchup">${esc(matchup)}</div>
+              ${sub ? `<div class="bestEditEntry-sub">${esc(sub)}</div>` : ""}
+            </div>
+            <div class="bestEditEntry-actions">
+              <button class="btn bestEntry-move bestEntry-up" data-idx="${i}" ${canUp ? "" : "disabled"}>▲</button>
+              <button class="btn bestEntry-move bestEntry-down" data-idx="${i}" ${canDown ? "" : "disabled"}>▼</button>
+              <button class="btn ghost-danger bestEntry-remove" data-idx="${i}">削除</button>
+            </div>
+          </div>
+          <div class="bestEditEntry-comment">
+            <input
+              class="bestEntry-commentInput"
+              type="text"
+              placeholder="一言コメント（任意）"
+              value="${comment}"
+              data-idx="${i}"
+            />
+          </div>
+        </div>`;
+    }).join("");
+
+    // 並び替えボタン
+    container.querySelectorAll(".bestEntry-up").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.idx);
+        if (idx > 0) {
+          [bestEditEntries[idx - 1], bestEditEntries[idx]] = [bestEditEntries[idx], bestEditEntries[idx - 1]];
+          renderBestEditEntries();
+        }
+      });
+    });
+    container.querySelectorAll(".bestEntry-down").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.idx);
+        if (idx < bestEditEntries.length - 1) {
+          [bestEditEntries[idx], bestEditEntries[idx + 1]] = [bestEditEntries[idx + 1], bestEditEntries[idx]];
+          renderBestEditEntries();
+        }
+      });
+    });
+
+    // 削除ボタン
+    container.querySelectorAll(".bestEntry-remove").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.idx);
+        bestEditEntries.splice(idx, 1);
+        renderBestEditEntries();
+      });
+    });
+
+    // コメント入力 — re-render不要なのでフォーカスが飛ばない
+    container.querySelectorAll(".bestEntry-commentInput").forEach(input => {
+      input.addEventListener("input", () => {
+        const idx = parseInt(input.dataset.idx);
+        if (bestEditEntries[idx] !== undefined) bestEditEntries[idx].comment = input.value;
+      });
+    });
+  } // end else
+
+  // entries の有無に関わらず、インラインピッカーの「追加済」状態を必ず更新
+  const inlineQ = document.getElementById("bestInlineQ");
+  renderBestInlinePicker(inlineQ ? inlineQ.value : "");
+}
+
+function saveBestEdits() {
+  const title = document.getElementById("bestEditName").value.trim();
+  if (!title) {
+    alert("ランキング名を入力してください");
+    return;
+  }
+  const now = new Date().toISOString();
+  if (currentBestId) {
+    const idx = bestRankings.findIndex(r => r.id === currentBestId);
+    if (idx >= 0) {
+      bestRankings[idx] = { ...bestRankings[idx], title, entries: bestEditEntries, updatedAt: now };
+    }
+  } else {
+    const newRanking = {
+      id: uid(), title, type: "match",
+      entries: bestEditEntries, createdAt: now, updatedAt: now,
+    };
+    bestRankings.unshift(newRanking);
+    currentBestId = newRanking.id;
+  }
+  saveBestRankings(bestRankings);
+  openBestDetail(currentBestId);
+}
+
+function deleteBestRanking(id) {
+  if (!confirm("このランキングを削除しますか？")) return;
+  bestRankings = bestRankings.filter(r => r.id !== id);
+  saveBestRankings(bestRankings);
+  currentBestId = null;
+  show("best");
+}
+
+function openBestPicker() {
+  document.getElementById("bestPickerQ").value = "";
+  renderBestPickerList("");
+  document.getElementById("bestPickerOverlay").classList.remove("hide");
+}
+
+function closeBestPicker() {
+  document.getElementById("bestPickerOverlay").classList.add("hide");
+}
+
+function renderBestPickerList(query) {
+  const container = document.getElementById("bestPickerList");
+  const addedIds = new Set(bestEditEntries.map(e => e.matchId));
+  const q = query.trim().toLowerCase();
+  const filtered = records.filter(r => {
+    if (!q) return true;
+    const blob = [r.homeTeam, r.awayTeam, r.venue, r.league].join(" ").toLowerCase();
+    return blob.includes(q);
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<p style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px">一致する試合が見つかりません</p>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(r => {
+    const matchup = fmtMatchup(r);
+    const dt = fmtDateTime(r.dateTime) || "日付未設定";
+    const score = (r.finalHome != null && r.finalAway != null) ? `${r.finalHome}–${r.finalAway}` : "—";
+    const added = addedIds.has(r.id);
+    const badgeStyle = added ? "" : `style="background:var(--team-primary);color:var(--on-team-primary)"`;
+    return `
+      <div class="bestPickerItem${added ? " bestPickerItem--added" : ""}" data-id="${r.id}">
+        <div class="bestPickerItem-info">
+          <div class="bestPickerItem-matchup">${esc(matchup)}</div>
+          <div class="bestPickerItem-sub">${esc(dt)} · ${esc(score)}</div>
+        </div>
+        <span class="bestPickerItem-badge" ${badgeStyle}>${added ? "追加済" : "追加"}</span>
+      </div>`;
+  }).join("");
+
+  container.querySelectorAll(".bestPickerItem:not(.bestPickerItem--added)").forEach(el => {
+    el.addEventListener("click", () => {
+      // 重複追加防止（CSS の pointer-events 無効化に加えて JS でも保証）
+      const alreadyAdded = bestEditEntries.some(e => e.matchId === el.dataset.id);
+      if (!alreadyAdded) {
+        bestEditEntries.push({ matchId: el.dataset.id, comment: "" });
+        renderBestEditEntries();
+      }
+      closeBestPicker();
+    });
+  });
 }
 
 // ===== Render list/detail =====
@@ -2180,6 +2675,7 @@ function initSupportedSideAutoDetect() {
 // 数字入力欄の半角正規化
 [qf_finalHome, qf_finalAway, f_finalHome, f_finalAway].forEach(normalizeNumericInput);
 
+bestRankings = loadBestRankings();
 initTheme();
 show("home");
 initAuth();
