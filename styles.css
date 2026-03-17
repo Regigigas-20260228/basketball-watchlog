@@ -1,44 +1,109 @@
 :root{
+  /* =========================================================
+     Theme tokens / base rules
+     - 既存の --team-primary 系は互換性維持のため残す
+     - 今後は color token としても扱えるように整理する
+     ========================================================= */
+
   /* ===== Neutral base ===== */
   --bg: #F5F5F3;
   --bg-glass: rgba(245,245,243,.9);
   --surface: #FFFFFF;
   --surface-2: #F8F8F7;
+  --surface-3: rgba(255,255,255,.72);
   --text: #1F2937;
+  --text-soft: #4B5563;
   --text-muted: #6B7280;
   --border: #E4E4E7;
+  --border-strong: rgba(31,41,55,.14);
 
-  /* ===== Team Primary — CTA / アクティブナビ / フォーカス ===== */
-  /* 仮色（ソフトオレンジ）。差し替えは applyTheme() を使ってください */
-  --team-primary: #E8945A;
-  --team-primary-hover: #D4834A;
-  --team-primary-soft: #FDDFC4;
+  /* ===== Existing compatibility tokens ===== */
+  --team-primary: #1A1A2E;
+  --team-primary-hover: #141425;
+  --team-primary-soft: #E8E8EC;
   --on-team-primary: #FFFFFF;
-  --team-primary-glow: rgba(232,148,90,.45);
+  --team-primary-glow: rgba(26,26,46,.35);
 
-  /* ===== Team Secondary — 補助アクセント / バッジ / グラフ2色目 ===== */
-  /* 仮色（ソフトネイビー）。差し替えは applyTheme() を使ってください */
-  /* secondary が白系の場合、secondarySoft はニュートラルにし広い面には使わない */
-  --team-secondary: #4B72B0;
-  --team-secondary-soft: #D6E4F5;
+  --team-secondary: #6B7280;
+  --team-secondary-soft: #ECEEF2;
   --on-team-secondary: #FFFFFF;
 
-  /* ===== Team Tertiary — 補助色（任意。必要な場面のみ使う）===== */
-  /* tertiary を持たないテーマでは applyTheme() は上書きしない */
+  /* tertiary は今後の余地として維持 */
   --team-tertiary: #6B7280;
   --team-tertiary-soft: #F0F0F2;
   --on-team-tertiary: #FFFFFF;
 
-  /* ===== Semantic fixed ===== */
-  --success: #22C55E;
-  --danger: #EF4444;
-  --danger-soft: #FEF2F2;
+  /* ===== Theme semantic tokens ===== */
+  --color-primary: var(--team-primary);
+  --color-primary-strong: var(--team-primary-hover);
+  --color-primary-soft: var(--team-primary-soft);
+  --color-on-primary: var(--on-team-primary);
+  --color-primary-glow: var(--team-primary-glow);
+
+  --color-secondary: var(--team-secondary);
+  --color-secondary-strong: var(--team-secondary);
+  --color-secondary-soft: var(--team-secondary-soft);
+  --color-on-secondary: var(--on-team-secondary);
+
+  --color-accent: #5F667A;
+  --color-accent-strong: #4F5669;
+  --color-accent-soft: rgba(95,102,122,.14);
+  --color-on-accent: #FFFFFF;
+
+  /* ===== Status tokens =====
+     完全な赤緑固定ではなく、今のテーマに寄せた落ち着いた差にする
+  */
+  --color-win: #B88900;
+  --color-win-soft: rgba(184,137,0,.12);
+
+  --color-lose: #5F6B85;
+  --color-lose-soft: rgba(95,107,133,.12);
+
+  --color-draw: #7F8798;
+  --color-draw-soft: rgba(127,135,152,.12);
+
+  --color-undecided: #98A0B0;
+  --color-undecided-soft: rgba(152,160,176,.12);
+
+  --success: var(--color-win);
+  --danger: #B65A5A;
+  --danger-soft: rgba(182,90,90,.12);
+  --warning: #C28A2C;
+  --warning-soft: rgba(194,138,44,.12);
+  --info: #607EA8;
+  --info-soft: rgba(96,126,168,.12);
 
   /* ===== Layout ===== */
   --shadow: 0 2px 12px rgba(0,0,0,.07);
   --shadow-lg: 0 4px 20px rgba(0,0,0,.1), 0 0 0 1px var(--border);
+  --shadow-soft: 0 8px 24px rgba(24,32,56,.08);
+  --shadow-card: 0 10px 30px rgba(24,32,56,.10);
+
   --radius: 16px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
   --w: 480px;
+
+  /* ===== Navigation tokens ===== */
+  --nav-bg: rgba(255,255,255,.72);
+  --nav-border: rgba(20,26,40,.08);
+  --nav-active-bg: var(--team-primary-soft);
+  --nav-active-color: var(--team-primary);
+  --nav-inactive-color: var(--text-muted);
+
+  /* ===== Button / icon tokens ===== */
+  --button-primary-bg: var(--team-primary);
+  --button-primary-hover: var(--team-primary-hover);
+  --button-primary-text: var(--on-team-primary);
+  --button-primary-glow: var(--team-primary-glow);
+  --button-secondary-text: var(--color-secondary);
+  --button-secondary-border: rgba(75,114,176,.24);
+
+  --icon-default: var(--text-muted);
+  --icon-primary: var(--team-primary);
+  --icon-secondary: var(--team-secondary);
+  --icon-accent: var(--color-accent);
+  --icon-danger: var(--danger);
 }
 *{box-sizing:border-box}
 body{
@@ -78,11 +143,11 @@ header{
 .btn:hover{background: var(--surface-2)}
 .btn:active{transform: translateY(1px)}
 .btn.primary{
-  background: var(--team-primary);
-  color: var(--on-team-primary);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
   border-color: transparent;
 }
-.btn.primary:hover{background: var(--team-primary-hover)}
+.btn.primary:hover{background: var(--button-primary-hover)}
 .btn.danger{border-color: var(--danger); color: var(--danger)}
 .btn.danger:hover{background: var(--danger-soft)}
 .btn.ghost{background: transparent; box-shadow:none; border-color: var(--border); color: var(--text-muted)}
@@ -158,8 +223,8 @@ input:focus, select:focus, textarea:focus{border-color: var(--team-primary); box
 .sectionTitle:before{
   content:"";
   width:10px; height:10px; border-radius: 3px;
-  background: var(--team-primary);
-  box-shadow: 0 0 0 3px var(--team-primary-soft);
+  background: var(--color-secondary);
+  box-shadow: 0 0 0 3px var(--color-secondary-soft);
   flex: 0 0 auto;
 }
 .hr{height:1px; background: var(--border); margin:14px 0}
@@ -214,7 +279,8 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 .bottomNav {
   display: flex; align-items: center;
   gap: 2px;
-  background: var(--surface);
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
   border-radius: 999px;
   padding: 5px;
   box-shadow: var(--shadow-lg);
@@ -226,7 +292,7 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   align-items: center; justify-content: center;
   gap: 3px; padding: 9px 2px 8px;
   background: none; border: none; cursor: pointer;
-  color: var(--text-muted); font-size: 9px; font-weight: 600;
+  color: var(--nav-inactive-color); font-size: 9px; font-weight: 600;
   font-family: inherit;
   border-radius: 999px;
   transition: color .15s, background .15s;
@@ -235,24 +301,45 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   min-width: 0;
 }
 .navItem:active { opacity: .65; }
-.navItem.active { color: var(--team-primary); background: var(--team-primary-soft); }
-.navItem .navIcon { font-size: 17px; line-height: 1; }
+.navItem.active { color: var(--nav-active-color); background: var(--nav-active-bg); }
+.navItem .navIcon {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--icon-default); line-height: 1;
+}
+.navItem.active .navIcon { color: var(--icon-primary); }
+
+.iconSvg {
+  display: block;
+  width: 1em; height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.iconSvg--nav { width: 17px; height: 17px; }
 
 .bottomPrimaryAction { pointer-events: all; flex-shrink: 0; }
 .primaryCTA {
   width: 60px; height: 60px;
-  background: var(--team-primary); color: var(--on-team-primary);
+  background: var(--button-primary-bg); color: var(--button-primary-text);
   border: none; border-radius: 999px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 1px;
   font-family: inherit; cursor: pointer;
-  box-shadow: 0 4px 18px var(--team-primary-glow);
+  box-shadow: 0 4px 18px var(--button-primary-glow);
   transition: background .15s, transform .06s;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-.primaryCTA:active { transform: scale(.93); background: var(--team-primary-hover); }
-.primaryCTA .ctaIcon { font-size: 26px; font-weight: 700; line-height: 1; }
+.primaryCTA:active { transform: scale(.93); background: var(--button-primary-hover); }
+.primaryCTA .ctaIcon {
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 1;
+  color: currentColor;
+}
+.iconSvg--cta { width: 24px; height: 24px; stroke-width: 2.2; }
 .primaryCTA .ctaLabel { font-size: 9px; font-weight: 700; letter-spacing: .3px; }
 
 /* ===== Theme Sheet ===== */
@@ -718,8 +805,8 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 /* 危険ゴーストボタン */
 .btn.ghost-danger {
   background: transparent;
-  border: 1.5px solid var(--danger, #e53935);
-  color: var(--danger, #e53935);
+  border: 1.5px solid var(--danger);
+  color: var(--danger);
   box-shadow: none;
 }
 .btn.ghost-danger:active { opacity: .7; }
@@ -981,8 +1068,18 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 }
 .homeHero-sideLabel--on { opacity: 1; color: var(--text-muted); }
 .homeHero-sideLabel .homeHero-supportMark {
-  color: var(--team-primary); font-size: 7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--icon-secondary);
   vertical-align: 1px; letter-spacing: 0;
+}
+.iconSvg--homeAux { width: 11px; height: 11px; stroke-width: 1.9; }
+.homeHero-venueText {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--text-muted);
+}
+.homeHero-venueIcon {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--icon-secondary);
 }
 .homeHero-teamName {
   font-size: 15px; font-weight: 700; line-height: 1.25; max-width: 78%;
@@ -1008,7 +1105,7 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 }
 .homeHero-score {
   font-size: 34px; font-weight: 800;
-  color: var(--team-primary);
+  color: var(--color-primary);
   letter-spacing: 2px; white-space: nowrap; line-height: 1;
   flex-shrink: 0;
 }
@@ -1020,9 +1117,9 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   letter-spacing: 2px; text-transform: uppercase;
   margin: -4px 0 4px;
 }
-.homeHero-outcome--win  { color: #16a34a; }
-.homeHero-outcome--loss { color: #dc2626; }
-.homeHero-outcome--draw { color: var(--text-muted); }
+.homeHero-outcome--win  { color: var(--color-win); }
+.homeHero-outcome--loss { color: var(--color-lose); }
+.homeHero-outcome--draw { color: var(--color-draw); }
 
 /* Sub row: result badge + venue */
 .homeHero-subRow {
@@ -1033,11 +1130,10 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   font-size: 11px; font-weight: 700;
   padding: 2px 8px; border-radius: 4px; letter-spacing: .3px;
 }
-.homeHero-badge--win       { background: rgba(34,197,94,.12);   color: #16a34a; }
-.homeHero-badge--loss      { background: rgba(239,68,68,.10);   color: #dc2626; }
-.homeHero-badge--draw      { background: rgba(107,114,128,.12); color: var(--text-muted); }
+.homeHero-badge--win       { background: var(--color-win-soft);       color: var(--color-win); }
+.homeHero-badge--loss      { background: var(--color-lose-soft);      color: var(--color-lose); }
+.homeHero-badge--draw      { background: var(--color-draw-soft);      color: var(--color-draw); }
 .homeHero-badge--undecided { background: var(--surface-2); color: var(--text-muted); }
-.homeHero-venueText { font-size: 11px; color: var(--text-muted); }
 
 .homeHero-memo {
   font-size: 13px; color: var(--text); margin: 2px 0 0;
@@ -1050,10 +1146,10 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 .homeHero-btnPrimary {
   flex: 1; justify-content: center;
   background: transparent; box-shadow: none;
-  border-color: var(--team-primary); color: var(--team-primary);
+  border-color: var(--button-secondary-border); color: var(--button-secondary-text);
   font-size: 13px; padding: 9px 12px;
 }
-.homeHero-btnPrimary:hover { background: var(--team-primary-soft); border-color: var(--team-primary); }
+.homeHero-btnPrimary:hover { background: var(--color-secondary-soft); border-color: var(--button-secondary-text); }
 .homeHero-btnEdit {
   -webkit-appearance: none; appearance: none;
   background: none; border: none; box-shadow: none;
@@ -1085,12 +1181,12 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 .homeSectionHd-title { font-size: 14px; font-weight: 700; }
 .homeSectionHd-more {
   font-size: 12px; font-weight: 600; letter-spacing: .2px;
-  color: var(--text-muted);
+  color: var(--button-secondary-text);
   background: none; border: none; cursor: pointer;
   font-family: inherit; padding: 0;
   transition: color .15s;
 }
-.homeSectionHd-more:active { color: var(--team-primary); }
+.homeSectionHd-more:active { color: var(--color-secondary-strong); }
 
 /* Recent items */
 .homeRecentItem {
@@ -1108,7 +1204,7 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   font-size: 13px; color: var(--text-muted); margin: 0 0 10px;
 }
 .homeEmptyBlock-create {
-  font-size: 13px; font-weight: 600; color: var(--team-primary);
+  font-size: 13px; font-weight: 600; color: var(--button-secondary-text);
   background: none; border: none; cursor: pointer;
   font-family: inherit; padding: 0; letter-spacing: .1px;
 }

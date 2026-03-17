@@ -1197,8 +1197,14 @@ function renderHome() {
     const meta     = [dt, latest.league].filter(Boolean).join(" · ");
     const supportedHome = latest.supportedSide === "home";
     const supportedAway = latest.supportedSide === "away";
-    const homeLabelHtml = `<span class="homeHero-sideLabel${supportedHome ? " homeHero-sideLabel--on" : ""}">${supportedHome ? '<span class="homeHero-supportMark">★</span> ' : ""}HOME</span>`;
-    const awayLabelHtml = `<span class="homeHero-sideLabel${supportedAway ? " homeHero-sideLabel--on" : ""}">${supportedAway ? '<span class="homeHero-supportMark">★</span> ' : ""}AWAY</span>`;
+    const supportMarkSvg = `
+      <span class="homeHero-supportMark" aria-hidden="true">
+        <svg class="iconSvg iconSvg--homeAux" viewBox="0 0 24 24" focusable="false">
+          <path d="M12 4.4l2.35 4.76 5.25.77-3.8 3.7.9 5.23L12 16.4l-4.7 2.46.9-5.23-3.8-3.7 5.25-.77z"></path>
+        </svg>
+      </span>`;
+    const homeLabelHtml = `<span class="homeHero-sideLabel${supportedHome ? " homeHero-sideLabel--on" : ""}">${supportedHome ? `${supportMarkSvg} ` : ""}HOME</span>`;
+    const awayLabelHtml = `<span class="homeHero-sideLabel${supportedAway ? " homeHero-sideLabel--on" : ""}">${supportedAway ? `${supportMarkSvg} ` : ""}AWAY</span>`;
     const resultCat = getResultCategory(latest); // "win"|"loss"|"draw"|"undecided"|""
     const outcomeMap = { win: "WIN", loss: "LOSE", draw: "DRAW" };
     const outcomeLabel = (supportedHome || supportedAway) ? (outcomeMap[resultCat] || "") : "";
@@ -1206,7 +1212,7 @@ function renderHome() {
       ? `<div class="homeHero-outcome homeHero-outcome--${resultCat}">${outcomeLabel}</div>`
       : "";
     const venueHtml = latest.venue
-      ? `<span class="homeHero-venueText">📍 ${esc(latest.venue)}</span>`
+      ? `<span class="homeHero-venueText"><span class="homeHero-venueIcon" aria-hidden="true"><svg class="iconSvg iconSvg--homeAux" viewBox="0 0 24 24" focusable="false"><path d="M12 20s6-5.38 6-10a6 6 0 10-12 0c0 4.62 6 10 6 10z"></path><circle cx="12" cy="10" r="2.2"></circle></svg></span>${esc(latest.venue)}</span>`
       : "";
     const subHtml = venueHtml
       ? `<div class="homeHero-subRow">${venueHtml}</div>`

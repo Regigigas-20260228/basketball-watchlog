@@ -463,32 +463,58 @@
 </div>
 
 <!-- ===== Bottom Dock ===== -->
-<div class="bottomDock" id="bottomDock">
-  <nav class="bottomNav">
-    <button class="navItem active" id="btnNavHome">
-      <span class="navIcon">🏠</span>
-      <span>ホーム</span>
-    </button>
-    <button class="navItem" id="btnNavBest">
-      <span class="navIcon">★</span>
-      <span>マイベスト</span>
-    </button>
-    <button class="navItem" id="btnNavReview">
-      <span class="navIcon">📊</span>
-      <span>振り返り</span>
-    </button>
-    <button class="navItem" id="btnNavAccount">
-      <span class="navIcon">👤</span>
-      <span>アカウント</span>
-    </button>
-  </nav>
-  <div class="bottomPrimaryAction">
-    <button class="primaryCTA" id="btnPrimaryRecord">
-      <span class="ctaIcon">＋</span>
-      <span class="ctaLabel">記録する</span>
-    </button>
-  </div>
-</div>
+    <div class="bottomDock" id="bottomDock">
+      <nav class="bottomNav">
+        <button class="navItem active" id="btnNavHome">
+          <span class="navIcon" aria-hidden="true">
+            <svg class="iconSvg iconSvg--nav" viewBox="0 0 24 24" focusable="false">
+              <path d="M3.5 10.5L12 3.5l8.5 7"></path>
+              <path d="M6.5 9.5V20h11V9.5"></path>
+            </svg>
+          </span>
+          <span>ホーム</span>
+        </button>
+        <button class="navItem" id="btnNavBest">
+          <span class="navIcon" aria-hidden="true">
+            <svg class="iconSvg iconSvg--nav" viewBox="0 0 24 24" focusable="false">
+              <path d="M12 4.4l2.35 4.76 5.25.77-3.8 3.7.9 5.23L12 16.4l-4.7 2.46.9-5.23-3.8-3.7 5.25-.77z"></path>
+            </svg>
+          </span>
+          <span>マイベスト</span>
+        </button>
+        <button class="navItem" id="btnNavReview">
+          <span class="navIcon" aria-hidden="true">
+            <svg class="iconSvg iconSvg--nav" viewBox="0 0 24 24" focusable="false">
+              <path d="M4 20h16"></path>
+              <path d="M7.5 20v-6"></path>
+              <path d="M12 20V9"></path>
+              <path d="M16.5 20v-11"></path>
+            </svg>
+          </span>
+          <span>振り返り</span>
+        </button>
+        <button class="navItem" id="btnNavAccount">
+          <span class="navIcon" aria-hidden="true">
+            <svg class="iconSvg iconSvg--nav" viewBox="0 0 24 24" focusable="false">
+              <circle cx="12" cy="8" r="3.2"></circle>
+              <path d="M5.5 19.5c1.2-3 3.6-4.8 6.5-4.8s5.3 1.8 6.5 4.8"></path>
+            </svg>
+          </span>
+          <span>アカウント</span>
+        </button>
+      </nav>
+      <div class="bottomPrimaryAction">
+        <button class="primaryCTA" id="btnPrimaryRecord">
+          <span class="ctaIcon" aria-hidden="true">
+            <svg class="iconSvg iconSvg--cta" viewBox="0 0 24 24" focusable="false">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+          </span>
+          <span class="ctaLabel">記録する</span>
+        </button>
+      </div>
+    </div>
 
 <!-- ===== Theme Sheet ===== -->
 <div class="themeOverlay" id="themeOverlay"></div>
