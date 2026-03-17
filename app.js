@@ -161,6 +161,7 @@ document.getElementById("btnQuickSave").addEventListener("click", () => onQuickS
 
 // buttons
 document.getElementById("btnBack").addEventListener("click", () => show("home"));
+document.getElementById("btnHeaderArchive").addEventListener("click", () => show("list"));
 
 // MyBest ボタン
 document.getElementById("btnBestDetailBack").addEventListener("click", () => show("best"));

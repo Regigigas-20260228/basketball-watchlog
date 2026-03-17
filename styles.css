@@ -1021,6 +1021,18 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 /* ===== App Header ===== */
 .appHeader { padding: 8px 16px 6px; }
 
+/* ヘッダー 記録棚ボタン */
+.headerArchiveBtn {
+  background: none; border: none; padding: 6px; margin: -6px -6px -6px 0;
+  color: var(--icon-default); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm); flex-shrink: 0;
+  transition: color .15s;
+}
+.headerArchiveBtn:hover,
+.headerArchiveBtn:active { color: var(--text); }
+.iconSvg--headerArchive { width: 20px; height: 20px; stroke-width: 2; }
+
 /* ===== List Controls ===== */
 .listControls { padding: 14px 16px 16px; }
 .listControls-titleRow {
