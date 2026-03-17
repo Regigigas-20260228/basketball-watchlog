@@ -319,6 +319,8 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   vector-effect: non-scaling-stroke;
 }
 .iconSvg--nav { width: 17px; height: 17px; }
+.iconSvg--listAux { width: 11px; height: 11px; stroke-width: 1.9; }
+.iconSvg--formAux { width: 11px; height: 11px; stroke-width: 1.9; }
 
 .bottomPrimaryAction { pointer-events: all; flex-shrink: 0; }
 .primaryCTA {
@@ -517,6 +519,17 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 }
 .quickFieldRow:focus-within .quickFieldLabel {
   color: var(--team-primary);
+}
+.formFieldLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.formFieldIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icon-secondary);
 }
 
 /* Quick form 専用インプット — 枠なし・軽い見た目 */
@@ -1012,20 +1025,64 @@ body { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   margin-bottom: 12px;
 }
 .listControls-title { font-size: 17px; font-weight: 700; margin: 0; }
+.listAuxIcon {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--icon-secondary);
+}
+.search .listSearchField {
+  flex: 1;
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.search .listSearchField input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  box-shadow: none;
+}
+.search .listSearchField input:focus {
+  border-color: transparent;
+  box-shadow: none;
+}
+.search .listSearchField:focus-within {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px var(--color-secondary-soft);
+}
+.listResetBtn { white-space: nowrap; }
 .listFilter-row { display: flex; gap: 6px; margin-top: 8px; }
+.listFilterField {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.listFilterField:focus-within {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px var(--color-secondary-soft);
+}
 .listFilter-select {
   flex: 1; min-width: 0;
   font-size: 12px;
-  padding: 8px 10px;
-  background: var(--surface-2);
+  padding: 8px 0;
+  background: transparent;
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: none;
+  border-radius: 0;
   outline: none;
   cursor: pointer;
   font-family: inherit;
   appearance: none;
   -webkit-appearance: none;
+}
+.listFilterField .listFilter-select:focus {
+  border-color: transparent;
+  box-shadow: none;
 }
 
 /* ===== Home Screen ===== */

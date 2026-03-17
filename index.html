@@ -31,29 +31,80 @@
           <span class="pill" id="countPill">0件</span>
         </div>
         <div class="search">
-          <input id="q" type="search" placeholder="チーム / 会場 / メモなど" autocomplete="off" />
-          <button class="btn" id="btnClearQ">リセット</button>
+          <div class="listSearchField">
+            <span class="listAuxIcon" aria-hidden="true">
+              <svg class="iconSvg iconSvg--listAux" viewBox="0 0 24 24" focusable="false">
+                <circle cx="11" cy="11" r="6"></circle>
+                <path d="M20 20l-4.2-4.2"></path>
+              </svg>
+            </span>
+            <input id="q" type="search" placeholder="チーム / 会場 / メモなど" autocomplete="off" />
+          </div>
+          <button class="btn listResetBtn" id="btnClearQ">
+            <span class="listAuxIcon" aria-hidden="true">
+              <svg class="iconSvg iconSvg--listAux" viewBox="0 0 24 24" focusable="false">
+                <path d="M20 7v5h-5"></path>
+                <path d="M4 17a8 8 0 0113.8-5.6L20 12"></path>
+              </svg>
+            </span>
+            <span>リセット</span>
+          </button>
         </div>
         <div class="listFilter-row">
-          <select id="listSort" class="listFilter-select">
-            <option value="desc">新しい順</option>
-            <option value="asc">古い順</option>
-          </select>
-          <select id="filterResult" class="listFilter-select">
-            <option value="">結果: すべて</option>
-            <option value="win">勝利</option>
-            <option value="loss">敗戦</option>
-            <option value="draw">引き分け</option>
-            <option value="undecided">勝敗未判定</option>
-          </select>
+          <div class="listFilterField">
+            <span class="listAuxIcon" aria-hidden="true">
+              <svg class="iconSvg iconSvg--listAux" viewBox="0 0 24 24" focusable="false">
+                <path d="M7 4v16"></path>
+                <path d="M17 20V4"></path>
+                <path d="M4 7l3-3 3 3"></path>
+                <path d="M14 17l3 3 3-3"></path>
+              </svg>
+            </span>
+            <select id="listSort" class="listFilter-select">
+              <option value="desc">新しい順</option>
+              <option value="asc">古い順</option>
+            </select>
+          </div>
+          <div class="listFilterField">
+            <span class="listAuxIcon" aria-hidden="true">
+              <svg class="iconSvg iconSvg--listAux" viewBox="0 0 24 24" focusable="false">
+                <path d="M4 6h16"></path>
+                <path d="M7 12h10"></path>
+                <path d="M10 18h4"></path>
+              </svg>
+            </span>
+            <select id="filterResult" class="listFilter-select">
+              <option value="">結果: すべて</option>
+              <option value="win">勝利</option>
+              <option value="loss">敗戦</option>
+              <option value="draw">引き分け</option>
+              <option value="undecided">勝敗未判定</option>
+            </select>
+          </div>
         </div>
         <div class="listFilter-row">
-          <select id="filterVenue" class="listFilter-select">
-            <option value="">会場: すべて</option>
-          </select>
-          <select id="filterTeam" class="listFilter-select">
-            <option value="">チーム: すべて</option>
-          </select>
+          <div class="listFilterField">
+            <span class="listAuxIcon" aria-hidden="true">
+              <svg class="iconSvg iconSvg--listAux" viewBox="0 0 24 24" focusable="false">
+                <path d="M12 20s6-5.38 6-10a6 6 0 10-12 0c0 4.62 6 10 6 10z"></path>
+                <circle cx="12" cy="10" r="2.2"></circle>
+              </svg>
+            </span>
+            <select id="filterVenue" class="listFilter-select">
+              <option value="">会場: すべて</option>
+            </select>
+          </div>
+          <div class="listFilterField">
+            <span class="listAuxIcon" aria-hidden="true">
+              <svg class="iconSvg iconSvg--listAux" viewBox="0 0 24 24" focusable="false">
+                <circle cx="12" cy="8" r="3.2"></circle>
+                <path d="M5.5 19.5c1.2-3 3.6-4.8 6.5-4.8s5.3 1.8 6.5 4.8"></path>
+              </svg>
+            </span>
+            <select id="filterTeam" class="listFilter-select">
+              <option value="">チーム: すべて</option>
+            </select>
+          </div>
         </div>
       </div>
       <div id="list" class="list"></div>
@@ -95,7 +146,17 @@
 
         <!-- ===== 基本入力（quickFieldRow スタイル） ===== -->
         <div class="quickFieldRow">
-          <span class="quickFieldLabel">観戦日</span>
+          <span class="quickFieldLabel formFieldLabel">
+            <span class="formFieldIcon" aria-hidden="true">
+              <svg class="iconSvg iconSvg--formAux" viewBox="0 0 24 24" focusable="false">
+                <rect x="4" y="5" width="16" height="15" rx="2"></rect>
+                <path d="M8 3.8v3.4"></path>
+                <path d="M16 3.8v3.4"></path>
+                <path d="M4 9h16"></path>
+              </svg>
+            </span>
+            <span>観戦日</span>
+          </span>
           <input id="f_dateTime" type="date" />
         </div>
         <div class="quickFieldRow">
@@ -124,7 +185,15 @@
           </div>
         </div>
         <div class="quickFieldRow">
-          <span class="quickFieldLabel">会場</span>
+          <span class="quickFieldLabel formFieldLabel">
+            <span class="formFieldIcon" aria-hidden="true">
+              <svg class="iconSvg iconSvg--formAux" viewBox="0 0 24 24" focusable="false">
+                <path d="M12 20s6-5.38 6-10a6 6 0 10-12 0c0 4.62 6 10 6 10z"></path>
+                <circle cx="12" cy="10" r="2.2"></circle>
+              </svg>
+            </span>
+            <span>会場</span>
+          </span>
           <input id="f_venue" type="text" placeholder="例：LaLa arena TOKYO-BAY" autocomplete="off" />
           <div class="qeSuggestions" id="sug_f_venue"></div>
         </div>
@@ -218,7 +287,17 @@
             <label>応援の様子
               <textarea id="f_cheer" placeholder="例：コールが熱い、アウェイブースター多め…"></textarea>
             </label>
-            <label>同行者・備考
+            <label>
+              <span class="formFieldLabel">
+                <span class="formFieldIcon" aria-hidden="true">
+                  <svg class="iconSvg iconSvg--formAux" viewBox="0 0 24 24" focusable="false">
+                    <path d="M5 19h5"></path>
+                    <path d="M13.2 6.2l4.6 4.6"></path>
+                    <path d="M4.5 19.5l1.2-4.5L14.7 6l3.3 3.3-8.9 8.9-4.6 1.3z"></path>
+                  </svg>
+                </span>
+                <span>同行者・備考</span>
+              </span>
               <textarea id="f_note" placeholder="例：家族と、雨で移動大変、次は早めに入場…"></textarea>
             </label>
           </div>
@@ -332,9 +411,19 @@
       <button class="quickEntryClose" id="btnQuickCancel" aria-label="閉じる">✕</button>
     </div>
 
-    <div class="quickEntryBody">
-      <div class="quickFieldRow">
-        <span class="quickFieldLabel">観戦日</span>
+      <div class="quickEntryBody">
+        <div class="quickFieldRow">
+        <span class="quickFieldLabel formFieldLabel">
+          <span class="formFieldIcon" aria-hidden="true">
+            <svg class="iconSvg iconSvg--formAux" viewBox="0 0 24 24" focusable="false">
+              <rect x="4" y="5" width="16" height="15" rx="2"></rect>
+              <path d="M8 3.8v3.4"></path>
+              <path d="M16 3.8v3.4"></path>
+              <path d="M4 9h16"></path>
+            </svg>
+          </span>
+          <span>観戦日</span>
+        </span>
         <input id="qf_dateTime" type="date" enterkeyhint="next" />
       </div>
       <div class="quickFieldRow">
@@ -363,7 +452,15 @@
         </div>
       </div>
       <div class="quickFieldRow">
-        <span class="quickFieldLabel">会場</span>
+        <span class="quickFieldLabel formFieldLabel">
+          <span class="formFieldIcon" aria-hidden="true">
+            <svg class="iconSvg iconSvg--formAux" viewBox="0 0 24 24" focusable="false">
+              <path d="M12 20s6-5.38 6-10a6 6 0 10-12 0c0 4.62 6 10 6 10z"></path>
+              <circle cx="12" cy="10" r="2.2"></circle>
+            </svg>
+          </span>
+          <span>会場</span>
+        </span>
         <input id="qf_venue" type="text" placeholder="例：LaLa arena TOKYO-BAY" autocomplete="off" enterkeyhint="next" />
         <div class="qeSuggestions" id="sug_venue"></div>
       </div>
@@ -385,7 +482,16 @@
         </div>
       </div>
       <div class="quickFieldRow">
-        <span class="quickFieldLabel">ひとことメモ</span>
+        <span class="quickFieldLabel formFieldLabel">
+          <span class="formFieldIcon" aria-hidden="true">
+            <svg class="iconSvg iconSvg--formAux" viewBox="0 0 24 24" focusable="false">
+              <path d="M5 19h5"></path>
+              <path d="M13.2 6.2l4.6 4.6"></path>
+              <path d="M4.5 19.5l1.2-4.5L14.7 6l3.3 3.3-8.9 8.9-4.6 1.3z"></path>
+            </svg>
+          </span>
+          <span>ひとことメモ</span>
+        </span>
         <input id="qf_memo" type="text" placeholder="例：接戦で最高だった！" enterkeyhint="done" />
       </div>
 
